@@ -62,7 +62,48 @@ Thumbs.db
 chroma_db/
 *.chroma
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Temporary files
 tmp/
 temp/
 *.tmp
+
+# Chinese documentation (local only, English version committed to git)
+*_CN.md
+*_ZH.md
+*_zh.md
+
+# Claude Code related files
+.claude/
+.claude-code/
+claude-code/
+.agentdir/
+.cursor/
+*.claude
+
+# AI assistant related
+.ai/
+.copilot/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Test artifacts
+.pytest_cache/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
