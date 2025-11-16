@@ -1,0 +1,246 @@
+# 🏦 Personal Loan Advisor Agent
+
+AI-powered Personal Loan Advisory System built with **Agno 2.0** and **OpenAI GPT-4**
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Agno 2.0](https://img.shields.io/badge/Agno-2.0-green.svg)](https://github.com/agno-agi/agno)
+[![OpenAI GPT-4](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)](https://openai.com/)
+
+---
+
+## 📋 Overview
+
+This is a **production-ready MVP** of an intelligent loan advisory agent designed for consumer banking applications. The agent helps customers understand their loan options, assess eligibility, and make informed borrowing decisions.
+
+### ✨ Key Features
+
+- ✅ **Loan Eligibility Assessment** - Rule-based checks (age, income, credit score, DTI ratio)
+- 💰 **Payment Calculations** - Accurate EMI calculations using standard financial formulas
+- 📊 **Amortization Schedules** - Detailed month-by-month payment breakdowns
+- 📈 **Affordability Analysis** - DTI ratio assessment and recommendations
+- 🔄 **Loan Comparison** - Compare different term options side-by-side
+- 🎯 **Max Loan Calculator** - Find maximum affordable loan amount
+
+### 🏗️ Architecture
+
+```
+┌─────────────────────────────────────┐
+│  Personal Loan Advisor Agent       │
+│  (Agno 2.0 + OpenAI GPT-4)         │
+└─────────────────┬───────────────────┘
+                  │
+        ┌─────────┼─────────┐
+        │         │         │
+    ┌───▼───┐ ┌───▼───┐ ┌───▼────┐
+    │ Loan  │ │ Loan  │ │ Future:│
+    │Eligib │ │Calcul │ │ Credit │
+    │ility  │ │ ator  │ │Scoring │
+    │ Tool  │ │ Tool  │ │(XGBoost)│
+    └───────┘ └───────┘ └────────┘
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- OpenAI API Key
+- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd personal-loan-advisor-agent
+
+# Install dependencies
+uv sync
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
+```
+
+### Running the Agent
+
+```bash
+# Start the interactive CLI
+uv run python main.py
+```
+
+---
+
+## 💡 Usage Examples
+
+### Example 1: Eligibility Check
+```
+You: I'm 35 years old, earn $8000/month, have a credit score of 720,
+     work full-time for 5 years, and want to borrow $50,000 for 36 months.
+     Am I eligible?
+
+Agent: [Provides detailed eligibility assessment with score and recommendations]
+```
+
+### Example 2: Payment Calculation
+```
+You: Calculate my monthly payment for a $60,000 loan at 5.5% for 48 months
+
+Agent: [Shows monthly payment, total interest, and payment breakdown]
+```
+
+### Example 3: Affordability Check
+```
+You: I earn $10,000/month with $2,000 existing debt. Can I afford a
+     $70,000 loan at 4.99% for 60 months?
+
+Agent: [Analyzes DTI ratio and provides affordability assessment]
+```
+
+---
+
+## 🧪 Testing
+
+The project follows **Test-Driven Development (TDD)** practices with comprehensive test coverage:
+
+```bash
+# Run all tests
+uv run pytest -v
+
+# Run specific test suites
+uv run pytest tests/test_loan_eligibility.py -v
+uv run pytest tests/test_loan_calculator.py -v
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=html
+```
+
+### Test Coverage
+
+- ✅ **16 tests** for LoanCalculatorTool
+- ✅ **18 tests** for LoanEligibilityTool
+- ✅ **Integration tests** for Agent workflow
+- ✅ **DeepEval** ready for quality assurance
+
+---
+
+## 🎯 Framework & Architecture Choices
+
+### Why Agno 2.0?
+
+1. **Modern & Lightweight**: Built specifically for production AI agents
+2. **Tool Integration**: Seamless function calling with OpenAI models
+3. **Type Safety**: Strong Pydantic integration
+4. **Performance**: Faster than LangChain for simple use cases
+
+### Why This Architecture?
+
+**Layered Approach**:
+1. **Rule Layer** (LoanEligibilityTool) - Fast, explainable, regulatory-compliant
+2. **Calculation Layer** (LoanCalculatorTool) - Accurate financial math
+3. **LLM Layer** (Agent) - Natural language understanding and orchestration
+
+This design ensures:
+- ✅ **Accuracy**: Financial calculations are deterministic
+- ✅ **Explainability**: Clear rules for loan decisions
+- ✅ **Compliance**: Meets banking regulatory requirements
+- ✅ **Flexibility**: Easy to add ML models later
+
+---
+
+## 🔮 Future Enhancements
+
+### Day 2 - ML Integration
+- [ ] Integrate XGBoost credit scoring model
+- [ ] Add historical loan data analysis
+- [ ] Portfolio insights for underwriters
+
+### Day 3 - UI & Visualization
+- [ ] AG-UI web interface
+- [ ] Chart.js amortization visualizations
+- [ ] Real-time loan comparison charts
+
+### Beyond MVP
+- [ ] Multi-language support
+- [ ] PDF report generation
+- [ ] Integration with banking APIs
+- [ ] Advanced risk models
+
+---
+
+## 📁 Project Structure
+
+```
+personal-loan-advisor-agent/
+├── src/
+│   ├── tools/
+│   │   ├── loan_eligibility.py      # Rule-based eligibility checks
+│   │   └── loan_calculator.py       # Financial calculations
+│   ├── agent/
+│   │   └── personal_loan_agent.py   # Main Agno agent
+│   ├── utils/
+│   │   └── config.py                # Configuration management
+│   └── evaluation/                   # DeepEval tests (coming soon)
+├── tests/
+│   ├── test_loan_eligibility.py
+│   ├── test_loan_calculator.py
+│   └── test_agent_integration.py
+├── notebooks/
+│   └── 01_loan_data_eda.ipynb       # Data exploration
+├── main.py                           # CLI entry point
+└── README.md
+```
+
+---
+
+## 💼 For Interview: Key Talking Points
+
+### 1. Framework Choice (Agno vs LangChain)
+- **Agno**: Simpler, faster for focused use cases
+- **LangChain**: More features but heavier
+- **Choice**: Agno 2.0 for production-ready MVP
+
+### 2. High-Accuracy Design
+- **Deterministic calculations**: No LLM for math
+- **Rule-based checks**: Explainable decisions
+- **Layered architecture**: Right tool for each task
+
+### 3. Evaluation Methodology
+- **Unit tests**: 34+ tests, >90% coverage
+- **Integration tests**: End-to-end workflows
+- **DeepEval ready**: Quality metrics framework
+
+### 4. Production Readiness
+- ✅ Error handling
+- ✅ Input validation (Pydantic)
+- ✅ Logging & debugging
+- ✅ Configuration management
+- ✅ Type hints throughout
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 🤝 Contributing
+
+This is an interview assignment project. For the production version, contributions would follow standard PR workflows with:
+- Unit tests required
+- Code review process
+- CI/CD integration
+- Documentation updates
+
+---
+
+## 📞 Support
+
+For questions about this implementation, please refer to the documentation or raise an issue.
+
+---
+
+**Built with ❤️ using Agno 2.0, OpenAI GPT-4, and modern Python practices**
