@@ -7,7 +7,6 @@ This module is designed to work seamlessly with AgentOS UI:
 - Compatible with AgentOS UI's session tracking
 """
 
-from doctest import debug
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.db.mongo import MongoDb
@@ -28,11 +27,12 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # MongoDB Configuration for AgentOS UI
-MONGODB_URL = getattr(config, 'mongodb_uri', "mongodb://admin:password123@localhost:27017/")
-DATABASE_NAME = "loan_advisor"
-SESSION_COLLECTION = "agno_sessions"
-MEMORY_COLLECTION = "agno_memories"
-METRICS_COLLECTION = "agno_metrics"
+# 从config对象获取MongoDB配置（从.env读取，如果没有则使用默认值）
+MONGODB_URL = config.mongodb.mongodb_uri
+DATABASE_NAME = config.mongodb.database_name
+SESSION_COLLECTION = config.mongodb.session_collection
+MEMORY_COLLECTION = config.mongodb.memory_collection
+METRICS_COLLECTION = config.mongodb.metrics_collection
 
 # System Instructions for the Agent
 SYSTEM_INSTRUCTIONS = """You are a helpful and professional Personal Loan Advisor.
@@ -82,7 +82,7 @@ Your goal is to help customers understand their loan options and make informed d
 loan_advisor_agent = Agent(
     name="Personal Loan Advisor",
     model=OpenAIChat(
-        id=config.api.openai_model,
+        id=config.api.agent_model,
         temperature=config.api.temperature
     ),
     # MongoDB configuration for UI session persistence

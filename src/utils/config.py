@@ -66,6 +66,33 @@ class ModelConfig(BaseModel):
     )
 
 
+class MongoDBConfig(BaseModel):
+    """MongoDB configuration."""
+
+    mongodb_uri: str = Field(
+        default_factory=lambda: os.getenv(
+            "MONGODB_URI", "mongodb://admin:password123@localhost:27017/"
+        ),
+        description="MongoDB connection URI",
+    )
+    database_name: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_DATABASE", "loan_advisor"),
+        description="MongoDB database name",
+    )
+    session_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_SESSION_COLLECTION", "agno_sessions"),
+        description="Session collection name",
+    )
+    memory_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_MEMORY_COLLECTION", "agno_memories"),
+        description="Memory collection name",
+    )
+    metrics_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_METRICS_COLLECTION", "agno_metrics"),
+        description="Metrics collection name",
+    )
+
+
 class APIConfig(BaseModel):
     """API configuration."""
 
@@ -77,9 +104,13 @@ class APIConfig(BaseModel):
         default_factory=lambda: os.getenv("DEEPEVAL_API_KEY"),
         description="DeepEval API key (optional)",
     )
-    openai_model: str = Field(
-        default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4"),
-        description="OpenAI model to use",
+    agent_model: str = Field(
+        default_factory=lambda: os.getenv("AGENT_MODEL", "gpt-4o-mini"),
+        description="Agent model for conversation and tool calls",
+    )
+    deepeval_model: str = Field(
+        default_factory=lambda: os.getenv("DEEPEVAL_MODEL", "gpt-4o-mini"),
+        description="DeepEval model for evaluation",
     )
     temperature: float = Field(
         default_factory=lambda: float(os.getenv("TEMPERATURE", "0.7")),
@@ -93,6 +124,7 @@ class Config(BaseModel):
     loan: LoanConfig = Field(default_factory=LoanConfig)
     model: ModelConfig = Field(default_factory=ModelConfig)
     api: APIConfig = Field(default_factory=APIConfig)
+    mongodb: MongoDBConfig = Field(default_factory=MongoDBConfig)
 
     # Project paths
     project_root: Path = Field(
