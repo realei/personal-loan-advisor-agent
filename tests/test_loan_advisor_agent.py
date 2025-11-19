@@ -327,7 +327,9 @@ def test_agent_with_reference_free_metrics(
         LLMTestCase(
             input=g.input,
             actual_output=g.actual_output,
-            # retrieval_context: for Faithfulness/Hallucination metrics
+            # context: for HallucinationMetric
+            context=g.retrieval_context,
+            # retrieval_context: for FaithfulnessMetric
             retrieval_context=g.retrieval_context,
         )
         for g in evaluation_dataset.goldens
@@ -432,7 +434,9 @@ def test_individual_case_example(agent_runner, reference_free_metrics):
     llm_test_case = LLMTestCase(
         input=test_case["input"],
         actual_output=result["actual_output"],
-        # retrieval_context: for Faithfulness/Hallucination metrics
+        # context: for HallucinationMetric
+        context=result["retrieval_context"],
+        # retrieval_context: for FaithfulnessMetric
         retrieval_context=result["retrieval_context"],
     )
 
@@ -494,6 +498,9 @@ if __name__ == "__main__":
         LLMTestCase(
             input=g.input,
             actual_output=g.actual_output,
+            # context: for HallucinationMetric
+            context=g.retrieval_context,
+            # retrieval_context: for FaithfulnessMetric
             retrieval_context=g.retrieval_context,
         )
         for g in dataset.goldens

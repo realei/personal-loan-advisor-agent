@@ -1,26 +1,26 @@
 """
-DeepEval配置文件
-集中管理所有评估相关的配置
+DeepEval configuration file
+Centralized management of all evaluation-related configurations
 """
 
 from typing import Dict, List, Any
 import os
 
 
-# ============= DeepEval配置 =============
+# ============= DeepEval Configuration =============
 
-# DeepEval评估使用的模型
-# 可以在.env中配置DEEPEVAL_MODEL，默认为gpt-4o-mini
+# Model used for DeepEval evaluation
+# Can be configured in .env via DEEPEVAL_MODEL, defaults to gpt-4o-mini
 EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gpt-4o-mini")
 
-# API密钥（如果需要）
+# API key (if needed)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Agent使用的模型（用于对话和工具调用）
-# 可以在.env中配置AGENT_MODEL，默认为gpt-4o-mini
+# Model used by Agent (for conversation and tool calls)
+# Can be configured in .env via AGENT_MODEL, defaults to gpt-4o-mini
 AGENT_MODEL = os.getenv("AGENT_MODEL", "gpt-4o-mini")
 
-# 评估阈值 - 可以通过环境变量配置，未设置则使用默认值
+# Evaluation thresholds - can be configured via environment variables, uses defaults if not set
 METRIC_THRESHOLDS = {
     "answer_relevancy": float(os.getenv("EVAL_THRESHOLD_ANSWER_RELEVANCY", "0.7")),
     "faithfulness": float(os.getenv("EVAL_THRESHOLD_FAITHFULNESS", "0.75")),
@@ -32,7 +32,7 @@ METRIC_THRESHOLDS = {
     "contextual_recall": float(os.getenv("EVAL_THRESHOLD_CONTEXTUAL_RECALL", "0.7")),
 }
 
-# 自定义指标阈值 - 可以通过环境变量配置
+# Custom metric thresholds - can be configured via environment variables
 CUSTOM_THRESHOLDS = {
     "tool_accuracy": float(os.getenv("EVAL_THRESHOLD_TOOL_ACCURACY", "0.8")),
     "parameter_correctness": float(os.getenv("EVAL_THRESHOLD_PARAMETER_CORRECTNESS", "0.9")),
@@ -41,52 +41,64 @@ CUSTOM_THRESHOLDS = {
     "tool_chain_logic": float(os.getenv("EVAL_THRESHOLD_TOOL_CHAIN_LOGIC", "0.85")),
 }
 
-# 期望的工具映射
+# Expected tool mapping
 EXPECTED_TOOLS_MAP = {
-    # 中文关键词
-    "计算月供": ["calculate_loan_payment"],
-    "计算还款": ["calculate_loan_payment"],
-    "月供多少": ["calculate_loan_payment"],
-    "每月还款": ["calculate_loan_payment"],
-
-    "检查资格": ["check_loan_eligibility"],
-    "是否符合": ["check_loan_eligibility"],
-    "能否贷款": ["check_loan_eligibility"],
-    "贷款资格": ["check_loan_eligibility"],
-
-    "负担得起": ["check_loan_affordability"],
-    "是否可负担": ["check_loan_affordability"],
-    "承受能力": ["check_loan_affordability"],
-
-    "比较贷款": ["compare_loan_terms"],
-    "对比期限": ["compare_loan_terms"],
-    "哪个划算": ["compare_loan_terms"],
-
-    "还款计划": ["generate_payment_schedule"],
-    "还款明细": ["generate_payment_schedule"],
-    "分期表": ["generate_payment_schedule"],
-
-    "最大贷款": ["calculate_max_affordable_loan"],
-    "最多能贷": ["calculate_max_affordable_loan"],
-    "贷款额度": ["calculate_max_affordable_loan"],
-
-    # 英文关键词
+    # Payment calculation keywords
+    "calculate monthly payment": ["calculate_loan_payment"],
+    "calculate repayment": ["calculate_loan_payment"],
+    "how much monthly payment": ["calculate_loan_payment"],
+    "monthly repayment": ["calculate_loan_payment"],
     "calculate payment": ["calculate_loan_payment"],
     "monthly payment": ["calculate_loan_payment"],
-    "check eligibility": ["check_loan_eligibility"],
-    "loan eligibility": ["check_loan_eligibility"],
-    "affordability": ["check_loan_affordability"],
-    "compare loans": ["compare_loan_terms"],
-    "payment schedule": ["generate_payment_schedule"],
-    "maximum loan": ["calculate_max_affordable_loan"],
+    "what's the monthly payment": ["calculate_loan_payment"],
+    "how much per month": ["calculate_loan_payment"],
 
-    # 复合场景
-    "检查资格并计算": ["check_loan_eligibility", "calculate_loan_payment"],
-    "计算并评估": ["calculate_loan_payment", "check_loan_affordability"],
-    "全面分析": ["check_loan_eligibility", "calculate_loan_payment", "check_loan_affordability"],
+    # Eligibility check keywords
+    "check eligibility": ["check_loan_eligibility"],
+    "am I qualified": ["check_loan_eligibility"],
+    "can I get loan": ["check_loan_eligibility"],
+    "loan qualification": ["check_loan_eligibility"],
+    "loan eligibility": ["check_loan_eligibility"],
+    "do I qualify": ["check_loan_eligibility"],
+    "eligible for loan": ["check_loan_eligibility"],
+
+    # Affordability keywords
+    "can afford": ["check_loan_affordability"],
+    "is it affordable": ["check_loan_affordability"],
+    "affordability capacity": ["check_loan_affordability"],
+    "affordability": ["check_loan_affordability"],
+    "can I afford": ["check_loan_affordability"],
+    "within budget": ["check_loan_affordability"],
+
+    # Loan comparison keywords
+    "compare loans": ["compare_loan_terms"],
+    "compare terms": ["compare_loan_terms"],
+    "which is better": ["compare_loan_terms"],
+    "which option": ["compare_loan_terms"],
+    "loan comparison": ["compare_loan_terms"],
+
+    # Payment schedule keywords
+    "payment schedule": ["generate_payment_schedule"],
+    "payment details": ["generate_payment_schedule"],
+    "installment schedule": ["generate_payment_schedule"],
+    "amortization schedule": ["generate_payment_schedule"],
+    "payment breakdown": ["generate_payment_schedule"],
+
+    # Maximum loan keywords
+    "maximum loan": ["calculate_max_affordable_loan"],
+    "maximum can borrow": ["calculate_max_affordable_loan"],
+    "loan limit": ["calculate_max_affordable_loan"],
+    "max loan amount": ["calculate_max_affordable_loan"],
+    "how much can I borrow": ["calculate_max_affordable_loan"],
+
+    # Composite scenarios
+    "check eligibility and calculate": ["check_loan_eligibility", "calculate_loan_payment"],
+    "calculate and evaluate": ["calculate_loan_payment", "check_loan_affordability"],
+    "comprehensive analysis": ["check_loan_eligibility", "calculate_loan_payment", "check_loan_affordability"],
+    "full evaluation": ["check_loan_eligibility", "calculate_loan_payment", "check_loan_affordability"],
 }
 
-# 参数验证规则
+# Parameter validation rules
 PARAMETER_VALIDATION_RULES = {
     "calculate_loan_payment": {
         "loan_amount": {
@@ -98,9 +110,9 @@ PARAMETER_VALIDATION_RULES = {
         "annual_interest_rate": {
             "type": "number",
             "min": 0.001,
-            "max": 0.5,  # 必须是小数形式，不是百分比
+            "max": 0.5,  # Must be decimal form, not percentage
             "required": True,
-            "format": "decimal"  # 特殊标记：必须是小数
+            "format": "decimal"  # Special marker: must be decimal
         },
         "loan_term_months": {
             "type": "integer",
@@ -171,36 +183,36 @@ PARAMETER_VALIDATION_RULES = {
     }
 }
 
-# 性能基准（基于实际agent表现）
+# Performance benchmarks (based on actual agent performance)
 PERFORMANCE_BENCHMARKS = {
     "response_time": {
-        "excellent": 5.0,    # 秒
-        "good": 8.0,         # 根据实际数据：平均8.64秒
-        "acceptable": 15.0,  # 阈值设为15秒
-        "poor": 30.0         # 超过30秒则太慢
+        "excellent": 5.0,    # seconds
+        "good": 8.0,         # Based on actual data: average 8.64 seconds
+        "acceptable": 15.0,  # Threshold set to 15 seconds
+        "poor": 30.0         # Over 30 seconds is too slow
     },
     "token_usage": {
         "excellent": 2000,
-        "good": 3500,        # 根据实际数据：平均3512 tokens
-        "acceptable": 5000,  # 阈值设为5000
+        "good": 3500,        # Based on actual data: average 3512 tokens
+        "acceptable": 5000,  # Threshold set to 5000
         "poor": 8000
     },
     "tool_calls": {
-        "simple_query": 1,      # 简单查询应该只调用1个工具
-        "moderate_query": 2,    # 中等查询2个工具
-        "complex_query": 3,     # 复杂查询3个工具
-        "max_allowed": 5        # 最多不超过5个
+        "simple_query": 1,      # Simple query should only call 1 tool
+        "moderate_query": 2,    # Moderate query 2 tools
+        "complex_query": 3,     # Complex query 3 tools
+        "max_allowed": 5        # Maximum of 5 tools
     }
 }
 
-# 测试数据筛选条件
+# Test data filter criteria
 TEST_DATA_FILTERS = {
     "recent": {
         "hours": 24,
         "limit": 20
     },
     "performance": {
-        "hours": 168,  # 一周
+        "hours": 168,  # One week
         "limit": 100
     },
     "quality": {
@@ -209,72 +221,72 @@ TEST_DATA_FILTERS = {
     }
 }
 
-# 报告配置
+# Report configuration
 REPORT_CONFIG = {
     "include_details": True,
     "include_metrics": True,
     "include_tools": True,
     "include_performance": True,
-    "output_format": "markdown",  # 可选: markdown, json, html
+    "output_format": "markdown",  # Options: markdown, json, html
     "save_to_file": False,
     "file_path": "evaluation_report.md"
 }
 
-# 测试套件定义
+# Test suite definitions
 TEST_SUITES = {
     "basic_quality": {
-        "name": "基础质量测试",
+        "name": "Basic Quality Test",
         "metrics": ["answer_relevancy", "faithfulness"],
         "required": True
     },
     "advanced_quality": {
-        "name": "高级质量测试",
+        "name": "Advanced Quality Test",
         "metrics": ["hallucination", "bias", "toxicity"],
         "required": False
     },
     "context_evaluation": {
-        "name": "上下文评估",
+        "name": "Context Evaluation",
         "metrics": ["contextual_relevancy", "contextual_precision"],
         "required": False
     },
     "tool_evaluation": {
-        "name": "工具评估",
+        "name": "Tool Evaluation",
         "metrics": ["tool_accuracy", "parameter_correctness"],
         "required": True
     },
     "performance": {
-        "name": "性能评估",
+        "name": "Performance Evaluation",
         "metrics": ["response_time", "token_usage"],
         "required": True
     }
 }
 
-# CI/CD配置
+# CI/CD configuration
 CI_CONFIG = {
-    "fail_on_threshold_breach": True,  # 低于阈值时失败
-    "parallel_execution": True,        # 并行执行测试
-    "max_workers": 4,                  # 最大并行数
-    "retry_failed": True,              # 重试失败的测试
-    "max_retries": 2,                  # 最大重试次数
-    "generate_report": True,           # 生成测试报告
-    "upload_results": False            # 上传结果到外部服务
+    "fail_on_threshold_breach": True,  # Fail when below threshold
+    "parallel_execution": True,        # Execute tests in parallel
+    "max_workers": 4,                  # Maximum parallel workers
+    "retry_failed": True,              # Retry failed tests
+    "max_retries": 2,                  # Maximum retry attempts
+    "generate_report": True,           # Generate test report
+    "upload_results": False            # Upload results to external service
 }
 
 
-# ============= 辅助函数 =============
+# ============= Helper Functions =============
 
 def get_threshold(metric_name: str) -> float:
-    """获取指标阈值"""
+    """Get metric threshold"""
     if metric_name in METRIC_THRESHOLDS:
         return METRIC_THRESHOLDS[metric_name]
     elif metric_name in CUSTOM_THRESHOLDS:
         return CUSTOM_THRESHOLDS[metric_name]
     else:
-        return 0.7  # 默认阈值
+        return 0.7  # Default threshold
 
 
 def get_expected_tools(input_text: str) -> List[str]:
-    """根据输入文本获取期望的工具"""
+    """Get expected tools based on input text"""
     expected_tools = []
     input_lower = input_text.lower()
 
@@ -282,21 +294,21 @@ def get_expected_tools(input_text: str) -> List[str]:
         if pattern.lower() in input_lower:
             expected_tools.extend(tools)
 
-    # 去重并返回
+    # Deduplicate and return
     return list(set(expected_tools))
 
 
 def validate_parameter(func_name: str, param_name: str, param_value: Any) -> bool:
-    """验证单个参数"""
+    """Validate a single parameter"""
     if func_name not in PARAMETER_VALIDATION_RULES:
-        return True  # 未定义规则的函数默认通过
+        return True  # Functions without defined rules pass by default
 
     rules = PARAMETER_VALIDATION_RULES[func_name].get(param_name, {})
 
     if not rules:
-        return True  # 未定义规则的参数默认通过
+        return True  # Parameters without defined rules pass by default
 
-    # 类型检查
+    # Type checking
     param_type = rules.get("type")
     if param_type == "number":
         if not isinstance(param_value, (int, float)):
@@ -308,34 +320,34 @@ def validate_parameter(func_name: str, param_name: str, param_value: Any) -> boo
         if not isinstance(param_value, str):
             return False
 
-    # 范围检查
+    # Range checking
     if "min" in rules and param_value < rules["min"]:
         return False
     if "max" in rules and param_value > rules["max"]:
         return False
 
-    # 枚举检查
+    # Enum checking
     if "enum" in rules and param_value not in rules["enum"]:
         return False
 
-    # 特殊格式检查
+    # Special format checking
     if rules.get("format") == "decimal":
-        # 检查是否是小数形式（0.05而不是5）
+        # Check if it's in decimal form (0.05 instead of 5)
         if param_type == "number" and param_value >= 1:
-            return False  # 利率不应该大于等于1
+            return False  # Interest rate should not be greater than or equal to 1
 
     return True
 
 
 def get_performance_rating(metric: str, value: float) -> str:
-    """获取性能评级"""
+    """Get performance rating"""
     if metric not in PERFORMANCE_BENCHMARKS:
         return "unknown"
 
     benchmarks = PERFORMANCE_BENCHMARKS[metric]
 
     if metric in ["response_time", "token_usage"]:
-        # 越低越好
+        # Lower is better
         if value <= benchmarks["excellent"]:
             return "excellent"
         elif value <= benchmarks["good"]:
@@ -345,12 +357,12 @@ def get_performance_rating(metric: str, value: float) -> str:
         else:
             return "poor"
     else:
-        # 特殊处理
+        # Special handling
         return "unknown"
 
 
 def format_test_result(metric_name: str, score: float, passed: bool, details: str = "") -> str:
-    """格式化测试结果"""
+    """Format test result"""
     status = "✅" if passed else "❌"
     threshold = get_threshold(metric_name)
 

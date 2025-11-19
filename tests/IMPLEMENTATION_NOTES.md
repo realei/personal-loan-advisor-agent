@@ -1,33 +1,33 @@
-# Agent 评估系统实现笔记
+# Agent Evaluation System Implementation Notes
 
-## ✅ 已完成的实现
+## ✅ Completed Implementation
 
-### 核心功能
+### Core Features
 
-1. **自动提取工具调用信息**
-   - 从 Agent response 的 `messages` 中自动提取工具调用
-   - 解析工具名称和 JSON 格式的参数
-   - 无需手动定义 `expected_tools` 和 `expected_tool_args`
+1. **Automatic Tool Call Information Extraction**
+   - Automatically extract tool calls from Agent response `messages`
+   - Parse tool names and JSON-formatted parameters
+   - No need to manually define `expected_tools` and `expected_tool_args`
 
-2. **工具重新执行机制**
-   - 实现 `_reconstruct_context()` 方法
-   - 使用提取的参数重新执行工具
-   - 获得真实的工具返回结果作为 `retrieval_context`
-   - 用于 DeepEval 的 Faithfulness 和 Hallucination metrics
+2. **Tool Re-execution Mechanism**
+   - Implemented `_reconstruct_context()` method
+   - Re-execute tools using extracted parameters
+   - Obtain actual tool return results as `retrieval_context`
+   - Used for DeepEval's Faithfulness and Hallucination metrics
 
-3. **智能序列化支持**
-   - 自动检测结果类型（Pydantic model 或 dataclass）
-   - Pydantic models: 使用 `model_dump()`
-   - Dataclasses: 使用 `dataclasses.asdict()`
-   - 特殊处理: pandas DataFrame 转换为 dict
-   - 统一转换为 JSON 字符串
+3. **Intelligent Serialization Support**
+   - Automatically detect result types (Pydantic model or dataclass)
+   - Pydantic models: Use `model_dump()`
+   - Dataclasses: Use `dataclasses.asdict()`
+   - Special handling: Convert pandas DataFrame to dict
+   - Uniformly convert to JSON strings
 
-## 🔧 技术细节
+## 🔧 Technical Details
 
-### 1. 工具调用提取
+### 1. Tool Call Extraction
 
 ```python
-# 从 agent response 中提取
+# Extract from agent response
 for msg in response.messages:
     if hasattr(msg, 'tool_calls') and msg.tool_calls:
         for tc in msg.tool_calls:
@@ -42,31 +42,31 @@ for msg in response.messages:
                 })
 ```
 
-### 2. 工具重新执行
+### 2. Tool Re-execution
 
 ```python
 def _reconstruct_context(self, tool_calls_with_args: list) -> list:
-    """重新执行工具获得准确的 retrieval_context"""
+    """Re-execute tools to obtain accurate retrieval_context"""
     from dataclasses import asdict, is_dataclass
 
-    # 初始化工具实例
+    # Initialize tool instances
     eligibility_checker = LoanEligibilityTool(...)
     loan_calculator = LoanCalculatorTool(...)
 
-    # 定义序列化辅助函数
+    # Define serialization helper function
     def serialize_result(result):
         if hasattr(result, 'model_dump'):
             return json.dumps(result.model_dump())
         elif is_dataclass(result):
             result_dict = asdict(result)
-            # 处理 pandas DataFrame
+            # Handle pandas DataFrame
             if 'schedule' in result_dict and hasattr(result_dict['schedule'], 'to_dict'):
                 result_dict['schedule'] = result_dict['schedule'].to_dict(orient='records')
             return json.dumps(result_dict, default=str)
         else:
             return json.dumps(str(result))
 
-    # 根据工具名称重新执行
+    # Re-execute based on tool name
     for tool_call in tool_calls_with_args:
         tool_name = tool_call['name']
         arguments = tool_call['arguments']
@@ -75,145 +75,145 @@ def _reconstruct_context(self, tool_calls_with_args: list) -> list:
             loan_request = LoanRequest(**arguments)
             result = loan_calculator.calculate_monthly_payment(loan_request)
             retrieval_context.append(serialize_result(result))
-        # ... 其他工具
+        # ... other tools
 
     return retrieval_context
 ```
 
-### 3. 关键决策
+### 3. Key Decisions
 
-#### 为什么重新执行工具而不是从消息提取？
+#### Why re-execute tools instead of extracting from messages?
 
-1. **准确性**: 工具的实际返回值是确定性的，重新执行确保获得相同结果
-2. **完整性**: 消息中可能只包含部分信息，重新执行获得完整结果
-3. **可验证性**: 可以验证工具是否正常工作
-4. **Faithfulness 评估**: DeepEval 的 Faithfulness metric 需要准确的 retrieval_context
+1. **Accuracy**: Tool's actual return values are deterministic, re-execution ensures the same results
+2. **Completeness**: Messages may only contain partial information, re-execution obtains complete results
+3. **Verifiability**: Can verify if tools are working properly
+4. **Faithfulness Evaluation**: DeepEval's Faithfulness metric requires accurate retrieval_context
 
-#### 为什么使用底层工具类而不是装饰器函数？
+#### Why use underlying tool classes instead of decorator functions?
 
-- `@tool` 装饰器返回的是 `Function` 对象，不能直接调用
-- 底层工具类提供了真实的方法实现
-- 可以直接传递参数并获得结果
+- `@tool` decorator returns `Function` objects that cannot be called directly
+- Underlying tool classes provide real method implementations
+- Can directly pass parameters and obtain results
 
-#### 为什么需要智能序列化？
+#### Why need intelligent serialization?
 
-- 工具返回的类型不统一：
+- Tool return types are not uniform:
   - `LoanEligibilityResult`: Pydantic model
   - `LoanCalculation`: Dataclass
-  - `AmortizationSchedule`: 包含 pandas DataFrame 的 dataclass
-- 需要统一转换为 JSON 字符串供 DeepEval 使用
-- `default=str` 处理特殊类型（如 datetime）
+  - `AmortizationSchedule`: Dataclass containing pandas DataFrame
+- Need to uniformly convert to JSON strings for DeepEval
+- `default=str` handles special types (e.g., datetime)
 
-## 📊 测试结果
+## 📊 Test Results
 
-### 快速验证（无 LLM 调用）
+### Quick Validation (No LLM Calls)
 
 ```bash
-# 工具调用信息展示
+# Tool call information display
 uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v -s
-# 结果: 成功提取工具名称和参数，14s 完成
+# Result: Successfully extracted tool names and parameters, completed in 14s
 
-# 输出关键词验证
+# Output keyword validation
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_output_keywords -v -s
-# 结果: 成功验证输出包含预期关键词，14s 完成
+# Result: Successfully verified output contains expected keywords, completed in 14s
 ```
 
-### 完整评估（包含 LLM metrics）
+### Complete Evaluation (Including LLM Metrics)
 
 ```bash
 uv run pytest tests/test_loan_advisor_agent.py::test_individual_case_example -v -s
-# 结果:
+# Results:
 # - AnswerRelevancyMetric: 0.79 ✅ PASS
 # - FaithfulnessMetric: 1.00 ✅ PASS
 # - HallucinationMetric: 0.33 ✅ PASS
 ```
 
-## 🎯 优势总结
+## 🎯 Advantages Summary
 
-### 相比手动定义
+### Compared to Manual Definition
 
-| 方面 | 手动定义 | 自动提取 + 工具重执行 |
+| Aspect | Manual Definition | Auto Extraction + Tool Re-execution |
 |------|---------|---------------------|
-| 测试用例定义 | 需要 5 个字段 | 只需 3 个字段 |
-| Expected tools | 手动写 | ✅ 自动提取 |
-| Tool arguments | 手动写 | ✅ 自动提取 |
-| Retrieval context | 手动构造 | ✅ 重新执行获得 |
-| 准确性 | 可能过时 | ✅ 始终准确 |
-| 维护成本 | 高 | ✅ 低 |
+| Test case definition | Requires 5 fields | Only 3 fields needed |
+| Expected tools | Manual writing | ✅ Auto extraction |
+| Tool arguments | Manual writing | ✅ Auto extraction |
+| Retrieval context | Manual construction | ✅ Re-execution obtains |
+| Accuracy | May become outdated | ✅ Always accurate |
+| Maintenance cost | High | ✅ Low |
 
-### 关键指标
+### Key Metrics
 
-- **代码简化**: TEST_CASES 定义减少 40% 代码量
-- **准确性提升**: retrieval_context 100% 准确（重新执行）
-- **开发效率**: 添加新测试用例只需 3 行代码
-- **可维护性**: 工具签名变化时无需更新测试用例
+- **Code Simplification**: TEST_CASES definition reduced by 40% code volume
+- **Accuracy Improvement**: retrieval_context 100% accurate (re-execution)
+- **Development Efficiency**: Adding new test cases requires only 3 lines of code
+- **Maintainability**: No need to update test cases when tool signatures change
 
-## 🚀 未来改进
+## 🚀 Future Improvements
 
-### 可选优化
+### Optional Optimizations
 
-1. **缓存工具执行结果**
-   - 如果同一工具调用多次出现，可以缓存结果
-   - 减少重复执行时间
+1. **Cache Tool Execution Results**
+   - If the same tool call appears multiple times, can cache results
+   - Reduce redundant execution time
 
-2. **并行执行工具**
-   - 多个工具调用可以并行执行
-   - 使用 `asyncio` 或 `concurrent.futures`
+2. **Parallel Tool Execution**
+   - Multiple tool calls can be executed in parallel
+   - Use `asyncio` or `concurrent.futures`
 
-3. **支持更多工具类型**
-   - 当前支持 loan_calculator 和 loan_eligibility
-   - 可以添加更多工具的重执行逻辑
+3. **Support More Tool Types**
+   - Currently supports loan_calculator and loan_eligibility
+   - Can add re-execution logic for more tools
 
-4. **错误处理增强**
-   - 当前只捕获异常并记录错误消息
-   - 可以添加更详细的错误信息和重试机制
+4. **Enhanced Error Handling**
+   - Currently only catches exceptions and logs error messages
+   - Can add more detailed error information and retry mechanisms
 
-## 📝 经验教训
+## 📝 Lessons Learned
 
-### 遇到的问题
+### Problems Encountered
 
-1. **问题**: `'Function' object is not callable`
-   - **原因**: 尝试调用 `@tool` 装饰器函数
-   - **解决**: 导入底层工具类
+1. **Problem**: `'Function' object is not callable`
+   - **Cause**: Attempting to call `@tool` decorator function
+   - **Solution**: Import underlying tool classes
 
-2. **问题**: 方法名不匹配
-   - **原因**: 假设的方法名与实际不符
-   - **解决**: 检查实际类定义
+2. **Problem**: Method name mismatch
+   - **Cause**: Assumed method name doesn't match actual
+   - **Solution**: Check actual class definition
 
-3. **问题**: `'LoanCalculation' object has no attribute 'model_dump'`
-   - **原因**: Dataclass 不是 Pydantic model
-   - **解决**: 使用 `dataclasses.asdict()` + 类型检测
+3. **Problem**: `'LoanCalculation' object has no attribute 'model_dump'`
+   - **Cause**: Dataclass is not a Pydantic model
+   - **Solution**: Use `dataclasses.asdict()` + type detection
 
-### 最佳实践
+### Best Practices
 
-1. **先检查类型再序列化**
-   - 使用 `hasattr()` 检查 Pydantic
-   - 使用 `is_dataclass()` 检查 dataclass
+1. **Check Type Before Serialization**
+   - Use `hasattr()` to check for Pydantic
+   - Use `is_dataclass()` to check for dataclass
 
-2. **使用 default=str 处理特殊类型**
-   - pandas DataFrame, datetime 等
-   - 确保 JSON 序列化不失败
+2. **Use default=str to Handle Special Types**
+   - pandas DataFrame, datetime, etc.
+   - Ensure JSON serialization doesn't fail
 
-3. **Session-scoped fixtures**
-   - Agent 运行较慢（5-10秒/用例）
-   - 使用 `scope="session"` 只运行一次
+3. **Session-scoped Fixtures**
+   - Agent runs slowly (5-10 seconds/case)
+   - Use `scope="session"` to run only once
 
-## 🔗 相关文件
+## 🔗 Related Files
 
-- `tests/test_loan_advisor_agent.py` - 主测试文件
-- `tests/README_EVALUATION.md` - 详细使用文档
-- `tests/SUMMARY.md` - 功能总结
-- `src/tools/loan_calculator.py` - 贷款计算工具
-- `src/tools/loan_eligibility.py` - 资格检查工具
+- `tests/test_loan_advisor_agent.py` - Main test file
+- `tests/README_EVALUATION.md` - Detailed usage documentation
+- `tests/SUMMARY.md` - Feature summary
+- `src/tools/loan_calculator.py` - Loan calculation tool
+- `src/tools/loan_eligibility.py` - Eligibility check tool
 
-## ✅ 验证清单
+## ✅ Verification Checklist
 
-- [x] 自动提取工具调用信息
-- [x] 重新执行工具获得 retrieval_context
-- [x] 支持 Pydantic models 序列化
-- [x] 支持 dataclasses 序列化
-- [x] 处理 pandas DataFrame
-- [x] 工具调用信息测试通过
-- [x] 输出关键词验证测试通过
-- [x] Reference-free metrics 评估通过
-- [x] 文档更新完成
+- [x] Automatically extract tool call information
+- [x] Re-execute tools to obtain retrieval_context
+- [x] Support Pydantic models serialization
+- [x] Support dataclasses serialization
+- [x] Handle pandas DataFrame
+- [x] Tool call information test passed
+- [x] Output keyword validation test passed
+- [x] Reference-free metrics evaluation passed
+- [x] Documentation updated

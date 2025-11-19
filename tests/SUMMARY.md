@@ -1,47 +1,47 @@
-# Agent 评估系统总结
+# Agent Evaluation System Summary
 
-## ✅ 最终实现
+## ✅ Final Implementation
 
-### 核心特性
+### Core Features
 
-1. **✅ 预定义测试用例**
-   - 包含 expected_tools, expected_tool_args, expected_output_contains
-   - 定义在 `TEST_CASES` 常量中
-   - 易于扩展和维护
+1. **✅ Predefined Test Cases**
+   - Include expected_tools, expected_tool_args, expected_output_contains
+   - Defined in `TEST_CASES` constant
+   - Easy to extend and maintain
 
-2. **✅ Pytest 中直接运行 Agent**
-   - 使用 `evaluation_dataset` fixture 自动运行 Agent
-   - 每个测试用例通过 `AgentRunner` 运行
-   - 自动提取 actual_output, tools_called, retrieval_context
+2. **✅ Run Agent Directly in Pytest**
+   - Use `evaluation_dataset` fixture to automatically run Agent
+   - Each test case runs through `AgentRunner`
+   - Automatically extract actual_output, tools_called, retrieval_context
 
-3. **✅ 混合 Metrics**
+3. **✅ Hybrid Metrics**
    - **Reference-free**: AnswerRelevancyMetric, FaithfulnessMetric, HallucinationMetric
-   - **Custom validation**: 工具调用验证、输出关键词验证
+   - **Custom validation**: Tool call validation, output keyword validation
 
-4. **✅ DeepEval 标准**
-   - 使用 `Golden`, `EvaluationDataset`, `LLMTestCase`
-   - 符合官方最佳实践
+4. **✅ DeepEval Standards**
+   - Use `Golden`, `EvaluationDataset`, `LLMTestCase`
+   - Complies with official best practices
 
-5. **✅ SOLID 原则**
-   - `AgentRunner`: 单一职责，运行测试用例
-   - Pytest fixtures: 清晰的依赖注入
-   - 易于理解和维护
+5. **✅ SOLID Principles**
+   - `AgentRunner`: Single responsibility, runs test cases
+   - Pytest fixtures: Clear dependency injection
+   - Easy to understand and maintain
 
-## 📁 文件结构
+## 📁 File Structure
 
 ```
 tests/
-├── test_loan_calculator_simple.py     # 工具单元测试
-├── test_loan_eligibility_simple.py    # 工具单元测试
-├── test_loan_advisor_agent.py         # ⭐ Agent 评估（核心）
-├── README.md                           # 测试总览
-├── README_EVALUATION.md               # Agent 评估详细文档
-└── SUMMARY.md                          # 本文件
+├── test_loan_calculator_simple.py     # Tool unit tests
+├── test_loan_eligibility_simple.py    # Tool unit tests
+├── test_loan_advisor_agent.py         # ⭐ Agent evaluation (core)
+├── README.md                           # Test overview
+├── README_EVALUATION.md               # Agent evaluation detailed documentation
+└── SUMMARY.md                          # This file
 ```
 
-## 🎯 测试用例
+## 🎯 Test Cases
 
-当前有 2 个预定义测试用例：
+Currently has 2 predefined test cases:
 
 ### 1. loan_calculation_basic
 ```python
@@ -67,35 +67,35 @@ tests/
 }
 ```
 
-## 🚀 使用方法
+## 🚀 Usage
 
-### 快速验证（无 LLM 调用，快速）
+### Quick Validation (No LLM Calls, Fast)
 ```bash
-# 工具调用验证
+# Tool call validation
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_tools_called -v -s
 
-# 输出关键词验证
+# Output keyword validation
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_output_keywords -v -s
 
-# 两者一起运行（推荐用于快速验证）
+# Run both together (recommended for quick validation)
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_tools_called tests/test_loan_advisor_agent.py::test_expected_output_keywords -v -s
 ```
 
-### 完整评估（包含 LLM metrics，较慢）
+### Complete Evaluation (Including LLM Metrics, Slower)
 ```bash
-# Reference-free metrics 评估
+# Reference-free metrics evaluation
 uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v -s
 
-# 单个用例示例
+# Individual case example
 uv run pytest tests/test_loan_advisor_agent.py::test_individual_case_example -v -s
 
-# 所有测试
+# All tests
 uv run pytest tests/test_loan_advisor_agent.py -v -s
 ```
 
-## 📊 测试结果示例
+## 📊 Test Results Example
 
-### 工具调用验证
+### Tool Call Validation
 ```
 ================================================================================
 🔧 Tool Call Validation
@@ -116,7 +116,7 @@ uv run pytest tests/test_loan_advisor_agent.py -v -s
 ================================================================================
 ```
 
-### 输出关键词验证
+### Output Keyword Validation
 ```
 ================================================================================
 🔍 Output Keyword Validation
@@ -143,40 +143,40 @@ uv run pytest tests/test_loan_advisor_agent.py -v -s
   HallucinationMetric: 0.00 (threshold: 0.5) ✅ PASS
 ```
 
-## 🎓 面试演示流程
+## 🎓 Interview Demonstration Flow
 
-### 1. 展示测试用例定义
+### 1. Show Test Case Definition
 ```python
-# 打开 test_loan_advisor_agent.py
-# 展示 TEST_CASES 常量
-# 解释每个字段的含义
+# Open test_loan_advisor_agent.py
+# Show TEST_CASES constant
+# Explain the meaning of each field
 ```
 
-### 2. 运行快速验证
+### 2. Run Quick Validation
 ```bash
-# 展示工具调用验证（无 LLM 调用，2-3 秒完成）
+# Show tool call validation (no LLM calls, completes in 2-3 seconds)
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_tools_called -v -s
 
-# 展示输出关键词验证
+# Show output keyword validation
 uv run pytest tests/test_loan_advisor_agent.py::test_expected_output_keywords -v -s
 ```
 
-### 3. 运行完整评估（可选）
+### 3. Run Complete Evaluation (Optional)
 ```bash
-# 展示 DeepEval metrics 评估
+# Show DeepEval metrics evaluation
 uv run pytest tests/test_loan_advisor_agent.py::test_individual_case_example -v -s
 ```
 
-### 4. 展示代码结构
+### 4. Show Code Structure
 ```python
-# AgentRunner - 运行测试用例
-# evaluation_dataset fixture - 自动运行并创建 dataset
-# Test functions - 不同的验证方式
+# AgentRunner - run test cases
+# evaluation_dataset fixture - automatically run and create dataset
+# Test functions - different validation methods
 ```
 
-## 🔧 扩展方法
+## 🔧 Extension Methods
 
-### 添加新测试用例
+### Add New Test Case
 ```python
 TEST_CASES.append({
     "id": "new_test_case",
@@ -188,7 +188,7 @@ TEST_CASES.append({
 })
 ```
 
-### 添加新的 Metric
+### Add New Metric
 ```python
 from deepeval.metrics import ContextualRelevancyMetric
 
@@ -197,11 +197,11 @@ def reference_free_metrics():
     return [
         AnswerRelevancyMetric(threshold=0.7),
         FaithfulnessMetric(threshold=0.7),
-        ContextualRelevancyMetric(threshold=0.7),  # 新增
+        ContextualRelevancyMetric(threshold=0.7),  # New
     ]
 ```
 
-### 添加新的验证函数
+### Add New Validation Function
 ```python
 def test_custom_validation(evaluation_dataset: EvaluationDataset):
     """Custom validation logic."""
@@ -210,64 +210,64 @@ def test_custom_validation(evaluation_dataset: EvaluationDataset):
         pass
 ```
 
-## 💡 优势总结
+## 💡 Advantages Summary
 
-### 相比之前的实现
+### Compared to Previous Implementation
 
-| 特性 | 之前 | 现在 |
+| Feature | Before | Now |
 |------|------|------|
-| **运行方式** | 需要单独运行 Agent | Pytest 自动运行 |
-| **测试用例** | 从 MongoDB 读取 | 预定义在代码中 |
-| **Expected outputs** | 没有 | 有（expected_tools, keywords） |
-| **测试文件数** | 3 个复杂文件 | 1 个简洁文件 |
-| **Metrics** | 只有 reference-free | Reference-free + Custom validation |
-| **面试演示** | 较复杂 | 简单直观 |
+| **Execution Method** | Need separate Agent run | Pytest auto runs |
+| **Test Cases** | Read from MongoDB | Predefined in code |
+| **Expected Outputs** | None | Yes (expected_tools, keywords) |
+| **Number of Test Files** | 3 complex files | 1 concise file |
+| **Metrics** | Only reference-free | Reference-free + Custom validation |
+| **Interview Demo** | More complex | Simple and intuitive |
 
-### 核心优势
+### Core Advantages
 
-1. **完全自包含**
-   - 无需预先运行 Agent
-   - 无需 MongoDB 中有数据
-   - 一条命令完成所有测试
+1. **Completely Self-contained**
+   - No need to run Agent beforehand
+   - No need for data in MongoDB
+   - One command completes all tests
 
-2. **快速验证**
-   - 工具调用验证（无 LLM，2-3 秒）
-   - 关键词验证（无 LLM，2-3 秒）
-   - 适合 CI/CD
+2. **Fast Validation**
+   - Tool call validation (no LLM, 2-3 seconds)
+   - Keyword validation (no LLM, 2-3 seconds)
+   - Suitable for CI/CD
 
-3. **完整评估**
-   - Reference-free metrics（LLM 评估）
-   - 可选择性运行
+3. **Complete Evaluation**
+   - Reference-free metrics (LLM evaluation)
+   - Selectively run
 
-4. **易于理解**
-   - 测试用例一目了然
-   - 代码结构清晰
-   - SOLID 原则
+4. **Easy to Understand**
+   - Test cases at a glance
+   - Clear code structure
+   - SOLID principles
 
-5. **易于扩展**
-   - 添加新用例：修改 TEST_CASES
-   - 添加新 metric：修改 fixture
-   - 添加新验证：添加 test function
+5. **Easy to Extend**
+   - Add new cases: modify TEST_CASES
+   - Add new metric: modify fixture
+   - Add new validation: add test function
 
-## ⚠️ 注意事项
+## ⚠️ Notes
 
-1. **Agent 运行时间**
-   - 每个测试用例需要 5-10 秒
-   - 2 个测试用例约 10-20 秒
-   - Session-scoped fixture 确保只运行一次
+1. **Agent Runtime**
+   - Each test case takes 5-10 seconds
+   - 2 test cases take about 10-20 seconds
+   - Session-scoped fixture ensures runs only once
 
-2. **LLM Metrics 时间**
-   - DeepEval metrics 需要调用 GPT-4
-   - 每个 metric 约 10-30 秒
-   - 注意 OpenAI API rate limits
+2. **LLM Metrics Time**
+   - DeepEval metrics require GPT-4 calls
+   - Each metric takes about 10-30 seconds
+   - Watch for OpenAI API rate limits
 
-3. **测试用例质量**
-   - 确保提供足够信息让 Agent 调用工具
-   - Expected keywords 应该合理
-   - 可以通过调试验证 Agent 行为
+3. **Test Case Quality**
+   - Ensure sufficient information for Agent to call tools
+   - Expected keywords should be reasonable
+   - Can verify Agent behavior through debugging
 
-## 📚 参考文档
+## 📚 Reference Documentation
 
-- [README_EVALUATION.md](./README_EVALUATION.md) - 详细使用文档
-- [README.md](./README.md) - 测试总览
-- [DeepEval Docs](https://deepeval.com/docs/evaluation-introduction) - DeepEval 官方文档
+- [README_EVALUATION.md](./README_EVALUATION.md) - Detailed usage documentation
+- [README.md](./README.md) - Test overview
+- [DeepEval Docs](https://deepeval.com/docs/evaluation-introduction) - DeepEval official documentation

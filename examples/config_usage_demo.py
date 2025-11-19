@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-模型配置使用示例
-演示如何使用AGENT_MODEL和DEEPEVAL_MODEL配置
+Model Configuration Usage Example
+Demonstrates how to use AGENT_MODEL and DEEPEVAL_MODEL configuration
 """
 
 import os
@@ -17,21 +17,21 @@ from tests.deepeval_config import AGENT_MODEL, EVAL_MODEL
 
 
 def demo_config_usage():
-    """演示配置使用"""
+    """Configuration Usage Demo"""
 
     print("=" * 70)
-    print("模型配置使用示例")
+    print("Model Configuration Usage Example")
     print("=" * 70)
 
-    # 示例1: 查看当前配置
-    print("\n📋 示例1: 查看当前配置\n")
-    print(f"Agent模型: {config.api.agent_model}")
-    print(f"DeepEval模型: {config.api.deepeval_model}")
+    # Example 1: View Current Configuration
+    print("\n📋 Example 1: View Current Configuration\n")
+    print(f"Agent Model: {config.api.agent_model}")
+    print(f"DeepEval Model: {config.api.deepeval_model}")
     print(f"Temperature: {config.api.temperature}")
 
-    # 示例2: Agent使用场景
-    print("\n🤖 示例2: Agent使用配置\n")
-    print("在创建Agent时使用:")
+    # Example 2: Agent Usage Configuration
+    print("\n🤖 Example 2: Agent Usage Configuration\n")
+    print("Used when creating Agent:")
     print(f"""
 from src.utils.config import config
 from agno import Agent, OpenAIChat
@@ -39,52 +39,52 @@ from agno import Agent, OpenAIChat
 agent = Agent(
     name="Personal Loan Advisor",
     model=OpenAIChat(
-        id=config.api.agent_model,  # 使用AGENT_MODEL环境变量
+        id=config.api.agent_model,  # Using AGENT_MODEL environment variable
         temperature=config.api.temperature
     ),
 )
     """)
-    print(f"✅ 当前会使用模型: {config.api.agent_model}")
+    print(f"✅ Currently using model: {config.api.agent_model}")
 
-    # 示例3: DeepEval使用场景
-    print("\n🧪 示例3: DeepEval评估使用配置\n")
-    print("在评估时使用:")
+    # Example 3: DeepEval Evaluation Configuration
+    print("\n🧪 Example 3: DeepEval Evaluation Configuration\n")
+    print("Used during evaluation:")
     print(f"""
 from tests.deepeval_config import EVAL_MODEL
 from deepeval.metrics import AnswerRelevancyMetric
 
 metric = AnswerRelevancyMetric(
-    model=EVAL_MODEL,  # 使用DEEPEVAL_MODEL环境变量
+    model=EVAL_MODEL,  # Using DEEPEVAL_MODEL environment variable
     threshold=0.7
 )
     """)
-    print(f"✅ 当前会使用模型: {EVAL_MODEL}")
+    print(f"✅ Currently using model: {EVAL_MODEL}")
 
-    # 示例4: 切换配置
-    print("\n🔄 示例4: 如何切换配置\n")
-    print("方式1 - 修改 .env 文件:")
+    # Example 4: Switch Configuration
+    print("\n🔄 Example 4: How to Switch Configuration\n")
+    print("Method 1 - Modify .env file:")
     print("""
-# 开发环境 - 成本优化
+# Development - Cost Optimized
 AGENT_MODEL=gpt-4o-mini
 DEEPEVAL_MODEL=gpt-4o-mini
 
-# 生产环境 - 性能优先
+# Production - Performance Priority
 AGENT_MODEL=gpt-4o
 DEEPEVAL_MODEL=gpt-4o-mini
     """)
 
-    print("\n方式2 - 临时环境变量:")
+    print("\nMethod 2 - Temporary Environment Variable:")
     print("  AGENT_MODEL=gpt-4o uv run python src/agent/loan_advisor_agent.py")
 
-    # 示例5: 成本估算
-    print("\n💰 示例5: 成本对比\n")
+    # Example 5: Cost Estimation
+    print("\n💰 Example 5: Cost Comparison\n")
 
     costs = {
         "gpt-4o-mini": {"input": 0.150, "output": 0.600},  # per 1M tokens
         "gpt-4o": {"input": 2.50, "output": 10.00},
     }
 
-    print("假设每次对话平均使用3000 tokens (2000输入 + 1000输出):")
+    print("Assuming average per conversation 3000 tokens (2000 input + 1000 output):")
     print()
 
     for model, price in costs.items():
@@ -92,28 +92,28 @@ DEEPEVAL_MODEL=gpt-4o-mini
         output_cost = (1000 / 1_000_000) * price["output"]
         total_cost = input_cost + output_cost
         print(f"{model}:")
-        print(f"  单次对话成本: ${total_cost:.6f}")
-        print(f"  1000次对话成本: ${total_cost * 1000:.2f}")
+        print(f"  Single conversation cost: ${total_cost:.6f}")
+        print(f"  1000 conversations cost: ${total_cost * 1000:.2f}")
         print()
 
-    # 示例6: 推荐配置
-    print("\n⭐ 示例6: 推荐配置\n")
+    # Example 6: Recommended Configuration
+    print("\n⭐ Example 6: Recommended Configuration\n")
 
     scenarios = {
-        "开发/测试": {
+        "Development/Testing": {
             "agent": "gpt-4o-mini",
             "eval": "gpt-4o-mini",
-            "理由": "成本低，迭代快",
+            "Reason": "Low cost, fast iteration",
         },
-        "面试演示": {
+        "Interview Demo": {
             "agent": "gpt-4o-mini",
             "eval": "gpt-4o-mini",
-            "理由": "性能足够，成本可控",
+            "Reason": "Sufficient performance, manageable cost",
         },
-        "生产环境": {
+        "Production": {
             "agent": "gpt-4o",
             "eval": "gpt-4o-mini",
-            "理由": "用户体验好，评估成本低",
+            "Reason": "Good UX, low evaluation cost",
         },
     }
 
@@ -121,11 +121,11 @@ DEEPEVAL_MODEL=gpt-4o-mini
         print(f"{scenario}:")
         print(f"  AGENT_MODEL={conf['agent']}")
         print(f"  DEEPEVAL_MODEL={conf['eval']}")
-        print(f"  理由: {conf['理由']}")
+        print(f"  Reason: {conf['Reason']}")
         print()
 
     print("=" * 70)
-    print("💡 提示: 运行 'uv run python scripts/check_config.py' 检查当前配置")
+    print("💡 Tip: Run 'uv run python scripts/check_config.py' to check current configuration")
     print("=" * 70)
 
 

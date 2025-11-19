@@ -1,29 +1,29 @@
-# 测试文件说明
+# Test Files Overview
 
-## 📋 测试文件总览
+## 📋 Test File Structure
 
 ```
 tests/
-├── test_loan_calculator_simple.py     # 工具单元测试 - 贷款计算器
-├── test_loan_eligibility_simple.py    # 工具单元测试 - 资格检查
-├── test_loan_advisor_agent.py         # Agent 评估测试 (DeepEval)
-└── README_EVALUATION.md               # Agent 评估详细文档
+├── test_loan_calculator_simple.py     # Tool unit tests - Loan calculator
+├── test_loan_eligibility_simple.py    # Tool unit tests - Eligibility checker
+├── test_loan_advisor_agent.py         # Agent evaluation tests (DeepEval)
+└── README_EVALUATION.md               # Agent evaluation detailed documentation
 ```
 
-## 🎯 测试分类
+## 🎯 Test Categories
 
-### 1. 工具单元测试 (2 个文件)
+### 1. Tool Unit Tests (2 files)
 
-**文件**:
+**Files**:
 - `test_loan_calculator_simple.py`
 - `test_loan_eligibility_simple.py`
 
-**用途**:
-- 快速验证工具函数逻辑
-- CI/CD 快速测试
-- 不依赖 Agent、LLM 或 MongoDB
+**Purpose**:
+- Quick validation of tool function logic
+- Fast CI/CD testing
+- No dependency on Agent, LLM, or MongoDB
 
-**运行**:
+**Run**:
 ```bash
 pytest tests/test_loan_calculator_simple.py -v
 pytest tests/test_loan_eligibility_simple.py -v
@@ -31,58 +31,58 @@ pytest tests/test_loan_eligibility_simple.py -v
 
 ---
 
-### 2. Agent 评估测试 (1 个文件)
+### 2. Agent Evaluation Tests (1 file)
 
-**文件**: `test_loan_advisor_agent.py`
+**File**: `test_loan_advisor_agent.py`
 
-**特点**:
-- ✅ 使用 DeepEval 标准（Golden, Dataset, Metrics）
-- ✅ 测试对象: `src/agent/loan_advisor_agent.py`
-- ✅ 数据来源: MongoDB `agno_sessions` 真实对话
-- ✅ 符合 SOLID 原则
-- ✅ 简洁，一个文件完成所有评估
+**Features**:
+- ✅ Uses DeepEval standards (Golden, Dataset, Metrics)
+- ✅ Test target: `src/agent/loan_advisor_agent.py`
+- ✅ Data source: Real conversations from MongoDB `agno_sessions`
+- ✅ Follows SOLID principles
+- ✅ Concise, all evaluation in one file
 
-**运行**:
+**Run**:
 ```bash
-# 详细说明见 README_EVALUATION.md
+# See README_EVALUATION.md for details
 pytest tests/test_loan_advisor_agent.py -v
 ```
 
-**评估指标**:
-- AnswerRelevancyMetric (回答相关性)
-- FaithfulnessMetric (事实准确性)
+**Evaluation Metrics**:
+- AnswerRelevancyMetric (Answer relevancy)
+- FaithfulnessMetric (Factual accuracy)
 
 ---
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 日常开发
+### Daily Development
 ```bash
-# 验证工具逻辑
+# Validate tool logic
 pytest tests/test_loan_*_simple.py -v
 ```
 
-### Agent 评估
+### Agent Evaluation
 ```bash
-# 1. 先运行 Agent 产生对话数据
+# 1. First run Agent to generate conversation data
 uv run python src/agent/loan_advisor_agent.py
 
-# 2. 运行评估
+# 2. Run evaluation
 pytest tests/test_loan_advisor_agent.py -v
 ```
 
 ---
 
-## 📊 对比表
+## 📊 Comparison Table
 
-| 测试类型 | 文件 | 数据来源 | 依赖 | 用途 |
-|---------|------|---------|------|------|
-| 工具单元测试 | `test_loan_*_simple.py` | 硬编码 | pytest | CI/CD |
-| Agent 评估 | `test_loan_advisor_agent.py` | MongoDB | DeepEval + pytest | 质量评估 |
+| Test Type | Files | Data Source | Dependencies | Use Case |
+|-----------|-------|-------------|-------------|----------|
+| Tool Unit Tests | `test_loan_*_simple.py` | Hardcoded | pytest | CI/CD |
+| Agent Evaluation | `test_loan_advisor_agent.py` | MongoDB | DeepEval + pytest | Quality Assessment |
 
 ---
 
-## 📚 更多信息
+## 📚 More Information
 
-- Agent 评估详细文档: [README_EVALUATION.md](./README_EVALUATION.md)
-- DeepEval 官方文档: https://deepeval.com/docs/evaluation-introduction
+- Agent evaluation detailed documentation: [README_EVALUATION.md](./README_EVALUATION.md)
+- DeepEval official documentation: https://deepeval.com/docs/evaluation-introduction

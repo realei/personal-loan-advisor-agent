@@ -27,7 +27,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # MongoDB Configuration for AgentOS UI
-# 从config对象获取MongoDB配置（从.env读取，如果没有则使用默认值）
+# Get MongoDB configuration from config object (read from .env, or use defaults if not set)
 MONGODB_URL = config.mongodb.mongodb_uri
 DATABASE_NAME = config.mongodb.database_name
 SESSION_COLLECTION = config.mongodb.session_collection

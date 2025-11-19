@@ -1,95 +1,95 @@
-# 评估阈值配置指南
+# Evaluation Threshold Configuration Guide
 
-## 📋 概述
+## 📋 Overview
 
-项目使用DeepEval进行Agent质量评估，所有评估指标的阈值都可以通过环境变量配置。阈值决定了Agent输出被认为是"通过"的最低标准。
+The project uses DeepEval for Agent quality evaluation. All evaluation metric thresholds can be configured through environment variables. Thresholds determine the minimum standard for Agent output to be considered "passing".
 
-## 🎯 阈值说明
+## 🎯 Threshold Descriptions
 
-### 标准DeepEval指标
+### Standard DeepEval Metrics
 
-这些是DeepEval内置的标准评估指标：
+These are DeepEval's built-in standard evaluation metrics:
 
-| 指标 | 环境变量 | 默认值 | 说明 | 越高越好 |
+| Metric | Environment Variable | Default | Description | Higher is Better |
 |------|----------|--------|------|---------|
-| Answer Relevancy | `EVAL_THRESHOLD_ANSWER_RELEVANCY` | 0.7 | 答案与问题的相关性 | ✅ |
-| Faithfulness | `EVAL_THRESHOLD_FAITHFULNESS` | 0.75 | 答案对上下文的忠实度 | ✅ |
-| Hallucination | `EVAL_THRESHOLD_HALLUCINATION` | 0.3 | 幻觉程度 | ❌ |
-| Bias | `EVAL_THRESHOLD_BIAS` | 0.3 | 偏见程度 | ❌ |
-| Toxicity | `EVAL_THRESHOLD_TOXICITY` | 0.2 | 毒性程度 | ❌ |
-| Contextual Relevancy | `EVAL_THRESHOLD_CONTEXTUAL_RELEVANCY` | 0.7 | 上下文相关性 | ✅ |
-| Contextual Precision | `EVAL_THRESHOLD_CONTEXTUAL_PRECISION` | 0.7 | 上下文精确度 | ✅ |
-| Contextual Recall | `EVAL_THRESHOLD_CONTEXTUAL_RECALL` | 0.7 | 上下文召回率 | ✅ |
+| Answer Relevancy | `EVAL_THRESHOLD_ANSWER_RELEVANCY` | 0.7 | Relevance of answer to question | ✅ |
+| Faithfulness | `EVAL_THRESHOLD_FAITHFULNESS` | 0.75 | Faithfulness of answer to context | ✅ |
+| Hallucination | `EVAL_THRESHOLD_HALLUCINATION` | 0.3 | Degree of hallucination | ❌ |
+| Bias | `EVAL_THRESHOLD_BIAS` | 0.3 | Degree of bias | ❌ |
+| Toxicity | `EVAL_THRESHOLD_TOXICITY` | 0.2 | Degree of toxicity | ❌ |
+| Contextual Relevancy | `EVAL_THRESHOLD_CONTEXTUAL_RELEVANCY` | 0.7 | Contextual relevance | ✅ |
+| Contextual Precision | `EVAL_THRESHOLD_CONTEXTUAL_PRECISION` | 0.7 | Contextual precision | ✅ |
+| Contextual Recall | `EVAL_THRESHOLD_CONTEXTUAL_RECALL` | 0.7 | Contextual recall | ✅ |
 
-### 自定义Agentic指标
+### Custom Agentic Metrics
 
-这些是针对Agent特性设计的自定义指标：
+These are custom metrics designed for Agent characteristics:
 
-| 指标 | 环境变量 | 默认值 | 说明 | 越高越好 |
+| Metric | Environment Variable | Default | Description | Higher is Better |
 |------|----------|--------|------|---------|
-| Tool Accuracy | `EVAL_THRESHOLD_TOOL_ACCURACY` | 0.8 | 工具选择准确性 | ✅ |
-| Parameter Correctness | `EVAL_THRESHOLD_PARAMETER_CORRECTNESS` | 0.9 | 参数正确性 | ✅ |
-| Response Time | `EVAL_THRESHOLD_RESPONSE_TIME` | 15.0 | 最大响应时间（秒） | ❌ |
-| Token Limit | `EVAL_THRESHOLD_TOKEN_LIMIT` | 5000 | Token使用上限 | ❌ |
-| Tool Chain Logic | `EVAL_THRESHOLD_TOOL_CHAIN_LOGIC` | 0.85 | 工具链逻辑性 | ✅ |
+| Tool Accuracy | `EVAL_THRESHOLD_TOOL_ACCURACY` | 0.8 | Tool selection accuracy | ✅ |
+| Parameter Correctness | `EVAL_THRESHOLD_PARAMETER_CORRECTNESS` | 0.9 | Parameter correctness | ✅ |
+| Response Time | `EVAL_THRESHOLD_RESPONSE_TIME` | 15.0 | Maximum response time (seconds) | ❌ |
+| Token Limit | `EVAL_THRESHOLD_TOKEN_LIMIT` | 5000 | Token usage limit | ❌ |
+| Tool Chain Logic | `EVAL_THRESHOLD_TOOL_CHAIN_LOGIC` | 0.85 | Tool chain logic | ✅ |
 
-**注意**:
-- ✅ 越高越好：分数需要 **≥** 阈值才通过
-- ❌ 越低越好：分数需要 **≤** 阈值才通过
+**Note**:
+- ✅ Higher is better: Score needs to be **≥** threshold to pass
+- ❌ Lower is better: Score needs to be **≤** threshold to pass
 
-## 🔧 配置方式
+## 🔧 Configuration Methods
 
-### 方式1: 使用默认值（推荐）
+### Method 1: Use Default Values (Recommended)
 
-**不需要在 `.env` 中配置**，系统会自动使用上表中的默认值。
+**No need to configure in `.env`**, the system will automatically use the default values in the table above.
 
-### 方式2: 自定义阈值
+### Method 2: Custom Thresholds
 
-在 `.env` 文件中设置需要调整的阈值：
+Set the thresholds you want to adjust in the `.env` file:
 
 ```bash
-# 只配置需要改变的阈值，其他使用默认值
+# Only configure thresholds that need to change, others use default values
 
-# 提高质量要求
-EVAL_THRESHOLD_ANSWER_RELEVANCY=0.8    # 从0.7提高到0.8
-EVAL_THRESHOLD_FAITHFULNESS=0.85       # 从0.75提高到0.85
+# Increase quality requirements
+EVAL_THRESHOLD_ANSWER_RELEVANCY=0.8    # Increase from 0.7 to 0.8
+EVAL_THRESHOLD_FAITHFULNESS=0.85       # Increase from 0.75 to 0.85
 
-# 降低性能要求（开发环境）
-EVAL_THRESHOLD_RESPONSE_TIME=30.0      # 从15秒放宽到30秒
+# Relax performance requirements (development environment)
+EVAL_THRESHOLD_RESPONSE_TIME=30.0      # Relax from 15 seconds to 30 seconds
 
-# 更严格的工具准确性
-EVAL_THRESHOLD_TOOL_ACCURACY=0.9       # 从0.8提高到0.9
+# Stricter tool accuracy
+EVAL_THRESHOLD_TOOL_ACCURACY=0.9       # Increase from 0.8 to 0.9
 ```
 
-## 💡 使用场景
+## 💡 Use Cases
 
-### 场景1: 开发环境（宽松标准）
+### Scenario 1: Development Environment (Relaxed Standards)
 
 ```bash
-# .env 配置
-# 降低要求，便于快速迭代
+# .env configuration
+# Lower requirements for quick iteration
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.6
 EVAL_THRESHOLD_FAITHFULNESS=0.65
 EVAL_THRESHOLD_RESPONSE_TIME=30.0
 EVAL_THRESHOLD_TOKEN_LIMIT=8000
 ```
 
-**适用于**: 开发阶段，快速迭代，允许更多试错
+**Suitable for**: Development phase, rapid iteration, allowing more trial and error
 
-### 场景2: 测试环境（默认标准）
+### Scenario 2: Test Environment (Default Standards)
 
 ```bash
-# .env 配置
-# 使用默认值，无需配置
+# .env configuration
+# Use default values, no configuration needed
 ```
 
-**适用于**: 持续集成、自动化测试、常规质量检查
+**Suitable for**: Continuous integration, automated testing, routine quality checks
 
-### 场景3: 生产环境（严格标准）
+### Scenario 3: Production Environment (Strict Standards)
 
 ```bash
-# .env 配置
-# 提高标准，确保高质量
+# .env configuration
+# Increase standards to ensure high quality
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.85
 EVAL_THRESHOLD_FAITHFULNESS=0.9
 EVAL_THRESHOLD_HALLUCINATION=0.2
@@ -98,240 +98,240 @@ EVAL_THRESHOLD_PARAMETER_CORRECTNESS=0.95
 EVAL_THRESHOLD_RESPONSE_TIME=10.0
 ```
 
-**适用于**: 生产发布前质量检查、重要功能验证
+**Suitable for**: Pre-production quality checks, critical feature validation
 
-### 场景4: 性能优化（关注性能指标）
+### Scenario 4: Performance Optimization (Focus on Performance Metrics)
 
 ```bash
-# .env 配置
-# 重点优化性能指标
-EVAL_THRESHOLD_RESPONSE_TIME=8.0      # 更严格的响应时间
-EVAL_THRESHOLD_TOKEN_LIMIT=3000       # 更严格的Token限制
+# .env configuration
+# Focus on optimizing performance metrics
+EVAL_THRESHOLD_RESPONSE_TIME=8.0      # Stricter response time
+EVAL_THRESHOLD_TOKEN_LIMIT=3000       # Stricter token limit
 ```
 
-**适用于**: 性能优化阶段，成本控制
+**Suitable for**: Performance optimization phase, cost control
 
-## 📊 阈值调整建议
+## 📊 Threshold Adjustment Recommendations
 
-### 调高阈值（更严格）的情况
+### When to Increase Thresholds (Stricter)
 
-1. **生产发布前** - 确保高质量
-2. **发现质量问题** - 提高相关指标要求
-3. **成本控制** - 降低Token和响应时间阈值
-4. **用户反馈差** - 提高相关性和准确性要求
+1. **Before Production Release** - Ensure high quality
+2. **Quality Issues Found** - Increase related metric requirements
+3. **Cost Control** - Lower token and response time thresholds
+4. **Poor User Feedback** - Increase relevance and accuracy requirements
 
-### 调低阈值（更宽松）的情况
+### When to Decrease Thresholds (More Relaxed)
 
-1. **开发初期** - 快速迭代，允许试错
-2. **实验性功能** - 探索可能性
-3. **测试新模型** - 了解基准性能
-4. **调试问题** - 便于定位具体问题
+1. **Early Development** - Quick iteration, allow trial and error
+2. **Experimental Features** - Explore possibilities
+3. **Testing New Models** - Understand baseline performance
+4. **Debugging Issues** - Facilitate locating specific problems
 
-## 🔍 验证配置
+## 🔍 Verify Configuration
 
-### 查看当前阈值
+### View Current Thresholds
 
 ```bash
-# 运行配置检查脚本
+# Run configuration check script
 uv run python scripts/check_config.py
 ```
 
-输出示例：
+Example output:
 ```
-📊 评估阈值配置:
-  标准指标:
-    answer_relevancy: 0.7 (默认值)
-    faithfulness: 0.75 (默认值)
+📊 Evaluation Threshold Configuration:
+  Standard Metrics:
+    answer_relevancy: 0.7 (default)
+    faithfulness: 0.75 (default)
     ...
 
-  自定义指标:
-    tool_accuracy: 0.8 (默认值)
-    parameter_correctness: 0.9 (默认值)
+  Custom Metrics:
+    tool_accuracy: 0.8 (default)
+    parameter_correctness: 0.9 (default)
     ...
 ```
 
-### 在代码中使用
+### Use in Code
 
 ```python
 from tests.deepeval_config import METRIC_THRESHOLDS, CUSTOM_THRESHOLDS
 
-# 获取特定指标的阈值
+# Get specific metric threshold
 relevancy_threshold = METRIC_THRESHOLDS["answer_relevancy"]
 tool_threshold = CUSTOM_THRESHOLDS["tool_accuracy"]
 
-# 在评估中使用
+# Use in evaluation
 from deepeval.metrics import AnswerRelevancyMetric
 
 metric = AnswerRelevancyMetric(
     model="gpt-4o-mini",
-    threshold=relevancy_threshold  # 使用配置的阈值
+    threshold=relevancy_threshold  # Use configured threshold
 )
 ```
 
-## 📈 阈值含义详解
+## 📈 Detailed Threshold Explanations
 
-### Answer Relevancy (答案相关性)
+### Answer Relevancy
 
-**含义**: 答案与用户问题的相关程度
+**Meaning**: How relevant the answer is to the user's question
 
-**示例**:
-- 问题: "如何计算月供？"
-- 好答案 (0.9): "月供计算公式是...每月需还款..."
-- 差答案 (0.3): "我们提供多种贷款产品..." (离题)
+**Examples**:
+- Question: "How to calculate monthly payment?"
+- Good answer (0.9): "The monthly payment formula is... need to pay monthly..."
+- Bad answer (0.3): "We offer various loan products..." (off-topic)
 
-**建议阈值**:
-- 开发: 0.6
-- 测试: 0.7（默认）
-- 生产: 0.8-0.9
+**Recommended Thresholds**:
+- Development: 0.6
+- Testing: 0.7 (default)
+- Production: 0.8-0.9
 
-### Faithfulness (忠实度)
+### Faithfulness
 
-**含义**: 答案是否忠实于提供的上下文，不编造信息
+**Meaning**: Whether the answer is faithful to the provided context, not fabricating information
 
-**示例**:
-- 上下文: "最低年利率5%"
-- 好答案 (0.95): "年利率最低为5%"
-- 差答案 (0.4): "年利率可低至3%" (编造)
+**Examples**:
+- Context: "Minimum annual interest rate 5%"
+- Good answer (0.95): "Annual interest rate starts at 5%"
+- Bad answer (0.4): "Interest rate can be as low as 3%" (fabricated)
 
-**建议阈值**:
-- 开发: 0.65
-- 测试: 0.75（默认）
-- 生产: 0.85-0.95
+**Recommended Thresholds**:
+- Development: 0.65
+- Testing: 0.75 (default)
+- Production: 0.85-0.95
 
-### Hallucination (幻觉)
+### Hallucination
 
-**含义**: 答案中编造或不准确信息的程度（越低越好）
+**Meaning**: Degree of fabricated or inaccurate information in answer (lower is better)
 
-**注意**: 这是"越低越好"的指标
+**Note**: This is a "lower is better" metric
 
-**建议阈值**:
-- 开发: 0.4
-- 测试: 0.3（默认）
-- 生产: 0.1-0.2
+**Recommended Thresholds**:
+- Development: 0.4
+- Testing: 0.3 (default)
+- Production: 0.1-0.2
 
-### Tool Accuracy (工具准确性)
+### Tool Accuracy
 
-**含义**: Agent选择的工具是否符合用户意图
+**Meaning**: Whether the tools selected by Agent match user intent
 
-**示例**:
-- 输入: "计算月供"
-- 正确工具: `calculate_loan_payment`
-- 错误工具: `check_loan_eligibility`
+**Examples**:
+- Input: "Calculate monthly payment"
+- Correct tool: `calculate_loan_payment`
+- Wrong tool: `check_loan_eligibility`
 
-**建议阈值**:
-- 开发: 0.7
-- 测试: 0.8（默认）
-- 生产: 0.9-0.95
+**Recommended Thresholds**:
+- Development: 0.7
+- Testing: 0.8 (default)
+- Production: 0.9-0.95
 
-### Response Time (响应时间)
+### Response Time
 
-**含义**: Agent完整响应所需的时间（秒）
+**Meaning**: Time required for Agent's complete response (seconds)
 
-**建议阈值**:
-- 开发: 30.0
-- 测试: 15.0（默认）
-- 生产: 8.0-10.0
+**Recommended Thresholds**:
+- Development: 30.0
+- Testing: 15.0 (default)
+- Production: 8.0-10.0
 
-## ⚠️ 注意事项
+## ⚠️ Important Notes
 
-### 1. 阈值不是越高/越低越好
+### 1. Thresholds Are Not Always Better Higher/Lower
 
-- 过高的阈值可能导致大量误报（false negatives）
-- 过低的阈值可能漏掉真实问题（false positives）
-- 建议根据实际数据调整
+- Overly high thresholds may lead to many false negatives
+- Overly low thresholds may miss real issues (false positives)
+- Recommended to adjust based on actual data
 
-### 2. 不同指标的权重
+### 2. Different Metric Weights
 
-并非所有指标同等重要：
+Not all metrics are equally important:
 
-**高优先级** (关键指标):
-- Faithfulness - 防止编造信息
-- Tool Accuracy - 确保功能正确
-- Parameter Correctness - 保证参数准确
+**High Priority** (critical metrics):
+- Faithfulness - Prevent fabricating information
+- Tool Accuracy - Ensure correct functionality
+- Parameter Correctness - Ensure parameter accuracy
 
-**中优先级**:
-- Answer Relevancy - 用户体验
-- Response Time - 性能指标
+**Medium Priority**:
+- Answer Relevancy - User experience
+- Response Time - Performance metric
 
-**低优先级** (参考指标):
-- Contextual Precision/Recall - 辅助指标
+**Low Priority** (reference metrics):
+- Contextual Precision/Recall - Supporting metrics
 
-### 3. 环境变量类型
+### 3. Environment Variable Types
 
-确保使用正确的类型：
+Ensure using correct types:
 
 ```bash
-# ✅ 正确 - 浮点数
+# ✅ Correct - Float
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.7
 
-# ❌ 错误 - 整数（会被转换为0.0）
+# ❌ Wrong - Integer (will be converted to 0.0)
 EVAL_THRESHOLD_ANSWER_RELEVANCY=1
 
-# ✅ 正确 - 整数（Token限制）
+# ✅ Correct - Integer (Token limit)
 EVAL_THRESHOLD_TOKEN_LIMIT=5000
 
-# ❌ 错误 - 浮点数（Token必须是整数）
+# ❌ Wrong - Float (Token must be integer)
 EVAL_THRESHOLD_TOKEN_LIMIT=5000.5
 ```
 
-### 4. 阈值调整流程
+### 4. Threshold Adjustment Process
 
-1. **基准测试** - 先用默认值运行评估，了解当前性能
-2. **分析结果** - 查看哪些指标未通过，通过率如何
-3. **调整阈值** - 根据业务需求调整
-4. **重新测试** - 验证调整效果
-5. **持续优化** - 根据反馈不断调整
+1. **Baseline Testing** - First run evaluation with default values, understand current performance
+2. **Analyze Results** - See which metrics didn't pass, what's the pass rate
+3. **Adjust Thresholds** - Adjust based on business needs
+4. **Re-test** - Verify adjustment effects
+5. **Continuous Optimization** - Continuously adjust based on feedback
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 使用默认配置（推荐）
+### 1. Use Default Configuration (Recommended)
 
 ```bash
-# 无需配置，直接运行评估
+# No configuration needed, run evaluation directly
 uv run pytest tests/test_mongodb_deepeval_with_storage.py -v
 ```
 
-### 2. 自定义配置
+### 2. Custom Configuration
 
 ```bash
-# 在 .env 中添加
+# Add to .env
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.8
 EVAL_THRESHOLD_TOOL_ACCURACY=0.9
 
-# 验证配置
+# Verify configuration
 uv run python scripts/check_config.py
 
-# 运行评估
+# Run evaluation
 uv run pytest tests/test_mongodb_deepeval_with_storage.py -v
 ```
 
-## 📚 相关文档
+## 📚 Related Documentation
 
-- [DeepEval官方文档](https://docs.deepeval.com/)
-- [评估系统指南 (EVALUATION_GUIDE.md)](./EVALUATION_GUIDE.md)
-- [配置管理 (MODEL_CONFIGURATION.md)](./MODEL_CONFIGURATION.md)
-- [环境变量示例 (.env.example)](../.env.example)
+- [DeepEval Official Documentation](https://docs.deepeval.com/)
+- [Evaluation System Guide (EVALUATION_GUIDE.md)](./EVALUATION_GUIDE.md)
+- [Configuration Management (MODEL_CONFIGURATION.md)](./MODEL_CONFIGURATION.md)
+- [Environment Variable Example (.env.example)](../.env.example)
 
-## 💡 最佳实践
+## 💡 Best Practices
 
-### 开发阶段
+### Development Phase
 ```bash
-# 宽松标准，快速迭代
+# Relaxed standards, quick iteration
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.6
 EVAL_THRESHOLD_FAITHFULNESS=0.65
 EVAL_THRESHOLD_RESPONSE_TIME=30.0
 ```
 
-### CI/CD测试
+### CI/CD Testing
 ```bash
-# 使用默认值，无需配置
-# 或略微放宽性能要求
+# Use default values, no configuration needed
+# Or slightly relax performance requirements
 EVAL_THRESHOLD_RESPONSE_TIME=20.0
 ```
 
-### 生产发布
+### Production Release
 ```bash
-# 严格标准，确保质量
+# Strict standards, ensure quality
 EVAL_THRESHOLD_ANSWER_RELEVANCY=0.85
 EVAL_THRESHOLD_FAITHFULNESS=0.9
 EVAL_THRESHOLD_TOOL_ACCURACY=0.95
@@ -340,5 +340,5 @@ EVAL_THRESHOLD_RESPONSE_TIME=10.0
 
 ---
 
-**更新日期**: 2025-01-19
-**版本**: 1.0
+**Last Updated**: 2025-01-19
+**Version**: 1.0

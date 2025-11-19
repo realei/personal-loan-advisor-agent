@@ -1,159 +1,159 @@
-# 测试说明
+# Test Documentation
 
-## 📋 测试文件组织
+## 📋 Test File Organization
 
 ```
 tests/
-├── README_TESTS.md                              # 本文件
+├── README_TESTS.md                              # This file
 │
-├── 业务逻辑单元测试 (给面试官演示)
-│   ├── test_loan_calculator_simple.py           # ⭐ 贷款计算器测试
-│   └── test_loan_eligibility_simple.py          # ⭐ 资格检查测试
+├── Business Logic Unit Tests (for interview demo)
+│   ├── test_loan_calculator_simple.py           # ⭐ Loan calculator tests
+│   └── test_loan_eligibility_simple.py          # ⭐ Eligibility checker tests
 │
-└── 评估系统测试 (核心亮点)
-    ├── deepeval_config.py                       # 评估配置
-    ├── test_mongodb_deepeval.py                 # DeepEval集成
-    ├── test_mongodb_deepeval_with_storage.py    # 带存储的评估
-    └── test_agent_evaluation.py                 # Agent评估
+└── Evaluation System Tests (core highlight)
+    ├── deepeval_config.py                       # Evaluation configuration
+    ├── test_mongodb_deepeval.py                 # DeepEval integration
+    ├── test_mongodb_deepeval_with_storage.py    # Evaluation with storage
+    └── test_agent_evaluation.py                 # Agent evaluation
 ```
 
 ---
 
-## 🚀 快速运行测试
+## 🚀 Quick Test Execution
 
-### 运行所有测试
+### Run All Tests
 ```bash
 uv run pytest tests/ -v
 ```
 
-### 运行业务逻辑测试（给面试官看）
+### Run Business Logic Tests (for interview demo)
 ```bash
-# 贷款计算器测试
+# Loan calculator tests
 uv run pytest tests/test_loan_calculator_simple.py -v
 
-# 资格检查测试
+# Eligibility checker tests
 uv run pytest tests/test_loan_eligibility_simple.py -v
 
-# 两个一起运行
+# Run both together
 uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
 ```
 
-### 运行评估系统测试
+### Run Evaluation System Tests
 ```bash
-# DeepEval集成测试
+# DeepEval integration tests
 uv run pytest tests/test_mongodb_deepeval_with_storage.py -v
 
-# 性能基准测试
+# Performance benchmark tests
 uv run pytest tests/test_mongodb_deepeval_with_storage.py::TestWithStorage::test_performance_benchmark_with_storage -v
 ```
 
 ---
 
-## 📊 测试覆盖的场景
+## 📊 Test Coverage Scenarios
 
-### `test_loan_calculator_simple.py` (贷款计算器)
+### `test_loan_calculator_simple.py` (Loan Calculator)
 
-#### ✅ 基础功能测试
-- **基本月供计算** - 最常见的贷款计算场景
-- **零利率贷款** - 边界情况
-- **利率影响** - 验证利率越高，月供越高
-- **期限影响** - 验证期限越长，月供越低但总利息更高
+#### ✅ Basic Functionality Tests
+- **Basic monthly payment calculation** - Most common loan calculation scenario
+- **Zero interest rate loan** - Edge case
+- **Interest rate impact** - Verify higher rate = higher payment
+- **Term impact** - Verify longer term = lower payment but higher total interest
 
-#### ✅ 边界情况测试
-- 极小贷款金额（$100）
-- 大额贷款（$1,000,000）
-- 负数输入验证（应该失败）
-- 零期限验证（应该失败）
+#### ✅ Edge Case Tests
+- Very small loan amount ($100)
+- Large loan amount ($1,000,000)
+- Negative input validation (should fail)
+- Zero term validation (should fail)
 
-#### ✅ 业务逻辑测试
-- **可负担性检查** - DTI比率计算
-- **还款计划** - 验证余额递减、本金占比增加
-- **总额匹配** - 验证数学正确性
+#### ✅ Business Logic Tests
+- **Affordability check** - DTI ratio calculation
+- **Payment schedule** - Verify balance decreases, principal portion increases
+- **Total amount matching** - Verify mathematical correctness
 
-#### ✅ 性能测试（可选）
-- 计算速度基准
-- 大型还款计划生成（360期）
+#### ✅ Performance Tests (optional)
+- Calculation speed benchmark
+- Large payment schedule generation (360 months)
 
-### `test_loan_eligibility_simple.py` (资格检查)
+### `test_loan_eligibility_simple.py` (Eligibility Check)
 
-#### ✅ 完美vs不合格场景
-- **完美申请人** - 所有条件都满足
-- **年龄不合格** - 太年轻/太老
-- **收入不合格** - 收入太低
-- **信用分不合格** - 信用分太低
+#### ✅ Perfect vs Unqualified Scenarios
+- **Perfect applicant** - All conditions met
+- **Age disqualified** - Too young/too old
+- **Income disqualified** - Income too low
+- **Credit score disqualified** - Credit score too low
 
-#### ✅ DTI比率测试
-- 可接受的DTI（< 50%）
-- 过高的DTI（> 50%）
+#### ✅ DTI Ratio Tests
+- Acceptable DTI (< 50%)
+- Excessive DTI (> 50%)
 
-#### ✅ 就业状态测试
-- 全职就业（最佳）
-- 失业（影响资格）
-- 就业时间太短
+#### ✅ Employment Status Tests
+- Full-time employment (best)
+- Unemployed (affects eligibility)
+- Employment duration too short
 
-#### ✅ 历史记录测试
-- 有违约记录
-- 有现有贷款
+#### ✅ History Record Tests
+- Has default record
+- Has existing loans
 
-#### ✅ 边界条件测试
-- 最小年龄（18岁）
-- 最大年龄（65岁）
-- 最低收入（$5,000）
-- 最低信用分（600）
+#### ✅ Boundary Condition Tests
+- Minimum age (18)
+- Maximum age (65)
+- Minimum income ($5,000)
+- Minimum credit score (600)
 
-#### ✅ 参数化测试
-- 多个年龄范围测试
-- 不同信用分数的影响
+#### ✅ Parameterized Tests
+- Multiple age range tests
+- Different credit score impacts
 
 ---
 
-## 💡 测试设计亮点（给面试官讲）
+## 💡 Test Design Highlights (for interview discussion)
 
-### 1. 测试金字塔
+### 1. Test Pyramid
 ```
         /\
-       /评估\       ← 评估系统测试（集成测试）
+       /Eval\       ← Evaluation system tests (integration tests)
       /------\
-     /单元测试\     ← 业务逻辑测试（这两个文件）
+     /Unit Test\    ← Business logic tests (these two files)
     /--------\
 ```
 
-### 2. 测试命名清晰
+### 2. Clear Test Naming
 ```python
 def test_basic_monthly_payment_calculation(self, calculator):
-    """测试基本月供计算 - 最常见场景"""
-    # Given-When-Then模式
+    """Test basic monthly payment calculation - most common scenario"""
+    # Given-When-Then pattern
 ```
 
-### 3. Given-When-Then模式
+### 3. Given-When-Then Pattern
 ```python
-# Given: 设置测试数据
+# Given: Setup test data
 result = calculator.calculate_monthly_payment(
     loan_amount=50000,
     annual_interest_rate=0.05,
     loan_term_months=36
 )
 
-# Then: 验证结果
+# Then: Verify results
 assert result.monthly_payment > 0
 assert result.total_interest > 0
 ```
 
-### 4. 边界值测试
+### 4. Boundary Value Testing
 ```python
 @pytest.mark.parametrize("age,expected_eligible", [
-    (17, False),  # 边界外
-    (18, True),   # 边界值 ✅
-    (35, True),   # 正常值
-    (65, True),   # 边界值 ✅
-    (66, False),  # 边界外
+    (17, False),  # Outside boundary
+    (18, True),   # Boundary value ✅
+    (35, True),   # Normal value
+    (65, True),   # Boundary value ✅
+    (66, False),  # Outside boundary
 ])
 ```
 
-### 5. 业务逻辑验证
+### 5. Business Logic Validation
 ```python
 def test_higher_interest_means_higher_payment(self, calculator):
-    """验证业务规则：利率越高，月供越高"""
+    """Verify business rule: higher interest rate = higher payment"""
     low_rate_result = calculator.calculate_monthly_payment(...)
     high_rate_result = calculator.calculate_monthly_payment(...)
 
@@ -162,65 +162,65 @@ def test_higher_interest_means_higher_payment(self, calculator):
 
 ---
 
-## 🎯 面试演示流程
+## 🎯 Interview Demo Process
 
-### 第1步：展示测试结构
+### Step 1: Show Test Structure
 ```bash
-# 显示测试文件
+# Display test files
 ls -lh tests/test_loan_*_simple.py
 ```
 
-### 第2步：运行业务逻辑测试
+### Step 2: Run Business Logic Tests
 ```bash
-# 运行并展示输出
+# Run and show output
 uv run pytest tests/test_loan_calculator_simple.py -v --tb=short
 
-# 输出示例：
+# Example output:
 # test_loan_calculator_simple.py::TestLoanCalculatorBasics::test_basic_monthly_payment_calculation PASSED
 # test_loan_calculator_simple.py::TestLoanCalculatorBasics::test_zero_interest_rate PASSED
 # test_loan_calculator_simple.py::TestLoanCalculatorEdgeCases::test_invalid_negative_amount PASSED
 # ...
 ```
 
-### 第3步：展示代码质量
+### Step 3: Show Code Quality
 ```bash
-# 显示测试覆盖率
+# Show test coverage
 uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py \
     --cov=src/tools --cov-report=term-missing
 ```
 
-### 第4步：讲解测试设计
-打开测试文件，展示：
-1. **清晰的测试组织** - 用class分组
-2. **Given-When-Then模式** - 可读性强
-3. **边界值测试** - 完整性
-4. **参数化测试** - pytest高级用法
-5. **fixture复用** - DRY原则
+### Step 4: Explain Test Design
+Open test files to show:
+1. **Clear test organization** - Grouped by class
+2. **Given-When-Then pattern** - High readability
+3. **Boundary value testing** - Completeness
+4. **Parameterized testing** - Advanced pytest usage
+5. **Fixture reuse** - DRY principle
 
-### 第5步：运行评估系统（亮点）
+### Step 5: Run Evaluation System (highlight)
 ```bash
-# 展示评估系统
+# Show evaluation system
 uv run python scripts/run_evaluation.py --mode recent --hours 24 --limit 3 --with-tools
 ```
 
 ---
 
-## 📈 测试统计
+## 📈 Test Statistics
 
-### 业务逻辑测试
-- **test_loan_calculator_simple.py**: 16个测试 ✅
-- **test_loan_eligibility_simple.py**: 26个测试 ✅
-- **总计**: 42个测试用例
+### Business Logic Tests
+- **test_loan_calculator_simple.py**: 16 tests ✅
+- **test_loan_eligibility_simple.py**: 26 tests ✅
+- **Total**: 42 test cases
 
-### 测试类型分布
+### Test Type Distribution
 ```
-基础功能测试:     40%  ████████
-边界情况测试:     30%  ██████
-业务逻辑验证:     20%  ████
-性能/集成测试:    10%  ██
+Basic functionality tests:  40%  ████████
+Edge case tests:            30%  ██████
+Business logic validation:  20%  ████
+Performance/integration:    10%  ██
 ```
 
-### 预期结果
+### Expected Results
 ```bash
 $ uv run pytest tests/test_loan_*_simple.py -v
 
@@ -238,9 +238,9 @@ test_loan_eligibility_simple.py::... PASSED       [100%]
 
 ---
 
-## 🔧 pytest配置
+## 🔧 pytest Configuration
 
-项目根目录的 `pytest.ini`:
+Project root `pytest.ini`:
 ```ini
 [pytest]
 markers =
@@ -260,57 +260,57 @@ addopts =
 
 ---
 
-## 💼 面试问答准备
+## 💼 Interview Q&A Preparation
 
-### Q: "你如何组织测试？"
-**A**: "我采用了测试金字塔原则：
-- **底层**: 大量单元测试（test_loan_calculator_simple.py等）- 快速、独立
-- **中层**: 集成测试（test_mongodb_deepeval.py）- 验证组件协作
-- **顶层**: 评估系统测试 - 端到端质量保证
+### Q: "How do you organize tests?"
+**A**: "I adopted the test pyramid principle:
+- **Bottom layer**: Numerous unit tests (test_loan_calculator_simple.py, etc.) - fast and independent
+- **Middle layer**: Integration tests (test_mongodb_deepeval.py) - verify component collaboration
+- **Top layer**: Evaluation system tests - end-to-end quality assurance
 
-每个测试文件都按功能分类（class），使用Given-When-Then模式提高可读性。"
+Each test file is organized by functionality (class), using Given-When-Then pattern for improved readability."
 
-### Q: "你如何保证测试质量？"
-**A**: "我关注几个方面：
-1. **边界值测试** - 测试临界条件（18岁、65岁等）
-2. **负面测试** - 验证错误处理（负数、零值）
-3. **业务逻辑验证** - 不只是技术正确，还要业务正确（利率高→月供高）
-4. **参数化测试** - 用相同逻辑测试多个场景
-5. **fixture复用** - DRY原则，减少重复代码"
+### Q: "How do you ensure test quality?"
+**A**: "I focus on several aspects:
+1. **Boundary value testing** - Test critical conditions (18, 65 years, etc.)
+2. **Negative testing** - Verify error handling (negative numbers, zero values)
+3. **Business logic validation** - Not just technically correct, but business correct (high rate → high payment)
+4. **Parameterized testing** - Test multiple scenarios with same logic
+5. **Fixture reuse** - DRY principle, reduce code duplication"
 
-### Q: "你的测试覆盖率如何？"
-**A**: "业务逻辑层（src/tools）的覆盖率>90%。更重要的是，我不只追求行覆盖率，还关注：
-- **分支覆盖** - 所有if/else都测试到
-- **边界覆盖** - 边界值都测试到
-- **业务场景覆盖** - 真实用户场景都覆盖"
+### Q: "What's your test coverage?"
+**A**: "Business logic layer (src/tools) coverage >90%. More importantly, I don't just pursue line coverage, but also:
+- **Branch coverage** - All if/else tested
+- **Boundary coverage** - All boundary values tested
+- **Business scenario coverage** - All real user scenarios covered"
 
-### Q: "为什么创建_simple.py测试文件？"
-**A**: "这些是专门为演示设计的简洁测试，展示：
-- 清晰的测试结构
-- 完整的场景覆盖
-- 最佳实践（Given-When-Then、参数化）
-- 业务逻辑验证
+### Q: "Why create _simple.py test files?"
+**A**: "These are concise tests designed specifically for demos, showcasing:
+- Clear test structure
+- Complete scenario coverage
+- Best practices (Given-When-Then, parameterization)
+- Business logic validation
 
-生产环境可能还有更详细的测试，但这些文件最适合给人看。"
+Production environments might have more detailed tests, but these files are best for presentation."
 
 ---
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 uv sync
 
-# 2. 运行业务逻辑测试
+# 2. Run business logic tests
 uv run pytest tests/test_loan_*_simple.py -v
 
-# 3. 查看覆盖率
+# 3. View coverage
 uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=html
 
-# 4. 打开覆盖率报告
+# 4. Open coverage report
 open htmlcov/index.html
 ```
 
 ---
 
-**测试是代码质量的保证，更是工程师专业性的体现！** ✨
+**Testing is the guarantee of code quality and a demonstration of engineering professionalism!** ✨
