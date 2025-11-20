@@ -7,51 +7,351 @@ Production-ready AI Loan Advisory System with **Complete Evaluation Framework**
 [![DeepEval](https://img.shields.io/badge/DeepEval-Latest-purple.svg)](https://docs.confident-ai.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-green.svg)](https://www.mongodb.com/)
 
----
+An AI-powered loan advisory system built with **AgentOS 2.0** and **GPT-4**, designed to help customers make informed personal loan decisions. This production-ready system combines intelligent loan advisory capabilities with a comprehensive evaluation framework using **DeepEval** for quality assurance.
 
-## 🌟 Highlights (Interview Highlights)
+## 📋 Table of Contents
 
-### ⭐ Complete Agent Evaluation System
-This is the **biggest highlight** of the project - implemented a complete production-grade evaluation framework:
-
-- 📊 **DeepEval Integration** - Multi-dimensional quality assessment (Relevancy, Faithfulness, Hallucination)
-- 🔧 **Context Reconstruction** - Innovative approach to reconstruct context from tool call re-execution, solving the context requirement for Hallucination metric
-- 📈 **Tool Call Validation** - Automatic extraction and validation of agent's tool calls and parameters
-- 🎯 **Keyword Validation** - Ensures output contains expected key information
-- 📝 **Complete Test Suite** - 42+ unit tests and integration tests
-
-### ⭐ SOLID Architecture Design
-- 🏗️ **Clear Layering** - tools (business logic) / agent (framework integration)
-- 🔌 **Dependency Inversion** - Core business logic doesn't depend on specific frameworks
-- 🧪 **Easy to Test** - Unit tests and integration tests completely separated
-- 📦 **Modularized** - Configuration management and logging system as independent modules
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+  - [Interactive Mode](#1️⃣-interactive-mode-cli-chat)
+  - [API Mode](#2️⃣-api-mode-rest-api-server)
+- [Testing](#-testing)
+  - [Unit Tests](#1️⃣-unit-tests)
+  - [DeepEval Evaluation](#2️⃣-deepeval-evaluation)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Development](#-development)
 
 ---
 
-## 📋 Overview
+## ✨ Features
 
-An intelligent loan advisory agent for consumer banking with **production-level quality assurance**. The agent not only helps customers with loan decisions but includes a comprehensive evaluation framework to ensure high-quality responses.
+### 💼 Loan Advisory Capabilities
 
-### ✨ Core Features
+This agent provides **6 loan advisory tools**:
 
-#### 💼 Loan Advisory (Core Functionality)
-- ✅ **Loan Eligibility Assessment** - Rule-based checks (age, income, credit score, DTI)
-- 💰 **Payment Calculations** - Accurate EMI using standard financial formulas
-- 📊 **Amortization Schedules** - Detailed month-by-month breakdowns
-- 📈 **Affordability Analysis** - DTI ratio assessment
-- 🔄 **Loan Comparison** - Compare different terms side-by-side
-- 🎯 **Max Loan Calculator** - Find maximum affordable amount
+1. **Check Loan Eligibility** - Evaluate customer profiles against banking criteria (age, income, credit score, employment, DTI ratio)
+2. **Calculate Loan Payment** - Compute accurate monthly payments, total costs, and interest
+3. **Generate Payment Schedule** - Create detailed month-by-month amortization breakdowns
+4. **Check Affordability** - Analyze debt-to-income ratios
+5. **Compare Loan Terms** - Side-by-side comparison of different loan options
+6. **Calculate Max Loan Amount** - Find the maximum affordable loan
 
-#### 🔬 Evaluation System (Evaluation Framework)
-- 📊 **Multi-metric Evaluation** - DeepEval metrics (Relevancy, Faithfulness, Hallucination)
-- 🔧 **Context Reconstruction** - Automatic context reconstruction from tool calls
-- ✅ **Tool Call Validation** - Validate tool selection and parameter correctness
-- 📝 **Output Validation** - Keyword matching validation
-- ⚡ **Multiple Test Modes** - Unit tests, integration tests, DeepEval evaluation
+### 🔬 Evaluation Framework
+
+- **46 Automated Tests** (42 unit tests + 4 DeepEval integration tests)
+- **DeepEval Metrics** - Answer Relevancy ≥70%, Faithfulness ≥70%, Hallucination ≤50%
+- **Context Reconstruction** - Innovative approach to reconstruct context from tool call re-execution
+- **Tool Call Validation** - Automatic validation of tool selection and parameters
+
+### 🚀 Deployment Modes
+
+- **Interactive CLI** - Real-time chat interface for development and demos
+- **REST API** - FastAPI server for production integration
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- MongoDB (optional, for session persistence)
+- OpenAI API Key
+- [uv](https://github.com/astral-sh/uv) package manager (recommended)
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd personal-loan-advisor-agent
+
+# 2. Install dependencies using uv
+uv sync
+
+# 3. Set up environment variables
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY (required)
+
+# 4. (Optional) Start MongoDB for session persistence
+# See Configuration section below for MongoDB setup
+```
+
+### Quick Test
+
+```bash
+# Run unit tests to verify installation
+uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables (.env file)
+
+Create a `.env` file from the template:
+
+```bash
+cp .env.example .env
+```
+
+#### Required Configuration
+
+```bash
+# OpenAI API Key (REQUIRED)
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+#### Optional Configuration
+
+**Model Settings:**
+```bash
+# Model for agent conversations (default: gpt-4o-mini)
+AGENT_MODEL=gpt-4o-mini
+
+# Model for DeepEval evaluation (default: gpt-4o-mini)
+DEEPEVAL_MODEL=gpt-4o-mini
+
+# LLM Temperature (default: 0.7)
+TEMPERATURE=0.7
+```
+
+**MongoDB Settings (Optional - for session persistence):**
+```bash
+# MongoDB connection URI
+MONGODB_URI=mongodb://admin:password@localhost:27017/
+
+# Database and collection names
+MONGODB_DATABASE=loan_advisor
+MONGODB_SESSION_COLLECTION=agno_sessions
+MONGODB_MEMORY_COLLECTION=agno_memories
+MONGODB_METRICS_COLLECTION=agno_metrics
+```
+
+**Loan Configuration (Optional - uses defaults if not set):**
+```bash
+MIN_AGE=18
+MAX_AGE=65
+MIN_INCOME_AED=5000
+MIN_CREDIT_SCORE=600
+MAX_DTI_RATIO=0.5
+MAX_LOAN_AMOUNT_AED=1000000
+```
+
+**DeepEval Thresholds (Optional):**
+```bash
+EVAL_THRESHOLD_ANSWER_RELEVANCY=0.7
+EVAL_THRESHOLD_FAITHFULNESS=0.75
+EVAL_THRESHOLD_HALLUCINATION=0.3
+```
+
+### MongoDB Setup (Optional)
+
+MongoDB is **optional**. The agent works without it, but you'll lose session persistence and conversation history.
+
+#### Option 1: Docker (Recommended)
+
+```bash
+# Start MongoDB using Docker
+docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  mongo:6.0
+```
+
+#### Option 2: Local Installation
+
+```bash
+# Install MongoDB (macOS)
+brew install mongodb-community@6.0
+brew services start mongodb-community@6.0
+
+# Install MongoDB (Ubuntu/Debian)
+sudo apt-get install mongodb
+sudo systemctl start mongodb
+```
+
+---
+
+## 🎮 Usage
+
+The agent can run in **two modes**: Interactive Mode (CLI chat) and API Mode (REST API server).
+
+### 1️⃣ Interactive Mode (CLI Chat)
+
+Start a conversational interface in your terminal:
+
+```bash
+uv run python src/agent/loan_advisor_agent.py
+```
+
+**Example conversation:**
+```
+You: I want to borrow $50,000 for 36 months at 5% interest. What's my monthly payment?
+
+Agent: ## Loan Payment Calculation
+
+**Loan Amount**: $50,000.00
+**Interest Rate**: 5.00% per year
+**Loan Term**: 36 months (3.0 years)
+
+### Monthly Payment: $1,498.88
+
+**Total Payment**: $53,959.68
+**Total Interest**: $3,959.68
+**Interest as % of Principal**: 7.9%
+```
+
+**Features:**
+- Real-time chat interface
+- Session persistence (if MongoDB is configured)
+- Tool execution displayed in real-time
+- Natural language queries
+- Type `exit` or `quit` to end the session
+
+**Use cases:**
+- Development and testing
+- Demos and presentations
+- Quick loan calculations
+- Debugging agent behavior
+
+---
+
+### 2️⃣ API Mode (REST API Server)
+
+Launch the FastAPI server for programmatic access:
+
+```bash
+uv run python src/agent/loan_advisor_agent.py --api
+```
+
+**Server endpoints:**
+- **API Server**: `http://localhost:8000`
+- **Interactive API Docs**: `http://localhost:8000/docs` (Swagger UI)
+- **OpenAPI Schema**: `http://localhost:8000/openapi.json`
+- **AgentOS UI**: `http://localhost:3000` (web interface)
+
+**Example API usage:**
+
+```bash
+# Create a new session
+curl -X POST "http://localhost:8000/sessions" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "user123"}'
+
+# Send a query
+curl -X POST "http://localhost:8000/sessions/{session_id}/runs" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Check eligibility for $30,000 loan, age 25, income $6000/month, credit score 720"
+  }'
+```
+
+**Use cases:**
+- Web/mobile application integration
+- Customer-facing loan advisory interfaces
+- Batch processing of loan queries
+- Production deployment
+
+---
+
+## 🧪 Testing
+
+The project includes **two testing layers**: Unit Tests (business logic) and DeepEval Tests (agent quality).
+
+### Test Summary
+
+| Test Type | Files | Count | Coverage | Speed |
+|-----------|-------|-------|----------|-------|
+| **Unit Tests** | `test_loan_calculator_simple.py`<br>`test_loan_eligibility_simple.py` | **42 tests** | All 6 tools | ~0.3s |
+| **DeepEval Tests** | `test_loan_advisor_agent.py` | **4 tests** | Agent quality | ~30s |
+
+---
+
+### 1️⃣ Unit Tests
+
+Test the **core business logic** of all 6 tools (no AI, no agent).
+
+#### Run Unit Tests
+
+```bash
+# Run all unit tests (42 tests, fast)
+uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
+
+# Run with coverage report
+uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=term-missing
+
+# Generate HTML coverage report
+uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=html
+open htmlcov/index.html
+```
+
+#### What's Tested
+
+**Calculator Tests** (16 tests) - 5 tools:
+- ✅ Monthly payment calculations
+- ✅ Amortization schedules
+- ✅ DTI ratio and affordability
+- ✅ Loan term comparisons
+- ✅ Maximum loan calculations
+- ✅ Edge cases (zero interest, large amounts)
+
+**Eligibility Tests** (26 tests) - 1 tool:
+- ✅ Age requirements
+- ✅ Income thresholds
+- ✅ Credit score validation
+- ✅ Employment status
+- ✅ DTI limits
+- ✅ Boundary conditions
+
+---
+
+### 2️⃣ DeepEval Evaluation
+
+Evaluate the **complete agent system** using LLM-as-judge metrics.
+
+#### Run DeepEval Tests
+
+```bash
+# Run all DeepEval tests (requires OpenAI API key)
+uv run pytest tests/test_loan_advisor_agent.py -v
+
+# Run specific tests
+uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v
+uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
+```
+
+#### Evaluation Metrics
+
+| Metric | Threshold | Purpose |
+|--------|-----------|---------|
+| **Answer Relevancy** | ≥ 70% | Ensures agent stays on topic |
+| **Faithfulness** | ≥ 70% | Response based on facts from tools |
+| **Hallucination** | ≤ 50% | Prevents false claims |
+| **Tool Call Accuracy** | 100% | Validates correct tool selection |
+| **Output Keywords** | 100% | Critical information present |
+
+#### Run All Tests
+
+```bash
+# Run everything (46 tests total)
+uv run pytest tests/ -v
+
+# Quick validation (unit tests only)
+uv run pytest tests/test_loan_*_simple.py -v
+```
 
 ---
 
 ## 🏗️ Architecture
+
+### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -75,230 +375,19 @@ An intelligent loan advisory agent for consumer banking with **production-level 
                       └────────────┘
 ```
 
-### Testing & Evaluation Architecture (Test and Evaluation Architecture)
+### Key Design Principles
 
-```
-Test Cases (2 categories)
-    ├─── Unit Tests (42 tests)
-    │    ├─ Loan Calculator (16 tests)
-    │    └─ Loan Eligibility (26 tests)
-    │
-    └─── DeepEval Integration Tests (4 tests)
-         ├─ Context Reconstruction
-         │  └─ Re-execute tools to get retrieval_context
-         ├─ DeepEval Metrics
-         │  ├─ Answer Relevancy
-         │  ├─ Faithfulness
-         │  └─ Hallucination
-         ├─ Tool Call Validation
-         │  ├─ Tool selection verification
-         │  └─ Parameter extraction
-         └─ Output Validation
-            └─ Keyword matching
-```
+1. **Two-Layer Architecture**
+   - **Tools Layer** (`src/tools/`) - Pure business logic, framework-agnostic
+   - **Agent Layer** (`src/agent/`) - AgentOS integration and orchestration
 
----
+2. **Dependency Inversion**
+   - Business logic doesn't depend on AI frameworks
+   - Tools can be reused in LangChain, LlamaIndex, etc.
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- MongoDB (optional, for AgentOS UI and session persistence)
-- OpenAI API Key
-- [uv](https://github.com/astral-sh/uv) (recommended)
-
-### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd personal-loan-advisor-agent
-
-# Install dependencies
-uv sync
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
-```
-
-## 🎮 Usage
-
-### Interactive Mode (Command Line Chat)
-
-Start a conversational interface in your terminal:
-
-```bash
-uv run python src/agent/loan_advisor_agent.py
-```
-
-**Features:**
-- Real-time chat interface
-- Session persistence in MongoDB
-- Tool call execution and display
-- Natural language loan queries
-
-**Example interaction:**
-```
-You: I want to borrow $50,000 for 36 months at 5% interest. What's my monthly payment?
-Agent: [Calculates and displays payment breakdown]
-```
-
-### API Mode (REST API Server)
-
-Launch the FastAPI server for programmatic access:
-
-```bash
-uv run python src/agent/loan_advisor_agent.py --api
-```
-
-**Endpoints:**
-- API Server: `http://localhost:8000`
-- Interactive API Docs: `http://localhost:8000/docs`
-- OpenAPI Schema: `http://localhost:8000/openapi.json`
-
-**Use cases:**
-- Integrate with web/mobile applications
-- Batch processing of loan queries
-- Microservice deployment
-
-## 🧪 Testing
-
-### Unit Tests (Business Logic)
-
-Fast, isolated tests for core loan calculation and eligibility logic:
-
-```bash
-# Run all unit tests (42 tests, ~0.3s)
-uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
-
-# Loan calculator tests only (16 tests)
-uv run pytest tests/test_loan_calculator_simple.py -v
-
-# Eligibility checker tests only (26 tests)
-uv run pytest tests/test_loan_eligibility_simple.py -v
-
-# With coverage report
-uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=term-missing
-```
-
-### DeepEval Evaluation (Agent Quality)
-
-LLM-based evaluation using DeepEval metrics:
-
-```bash
-# Run all DeepEval tests (includes AI-powered metrics)
-uv run pytest tests/test_loan_advisor_agent.py -v
-
-# Specific evaluation tests
-uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v
-uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
-uv run pytest tests/test_loan_advisor_agent.py::test_expected_output_keywords -v
-
-# Individual test case example
-uv run pytest tests/test_loan_advisor_agent.py::test_individual_case_example -v
-```
-
-**Evaluation Metrics:**
-- ✅ Answer Relevancy (≥70%)
-- ✅ Faithfulness (≥70%)
-- ✅ Hallucination Detection (≤50%)
-- ✅ Tool Call Accuracy
-- ✅ Output Keyword Validation
-
-### Complete Test Suite
-
-Run everything together:
-
-```bash
-# All tests (unit + evaluation)
-uv run pytest tests/ -v
-
-# Quick validation (unit tests only)
-uv run pytest tests/test_loan_*_simple.py -v
-
-# Generate HTML coverage report
-uv run pytest tests/ --cov=src --cov-report=html
-open htmlcov/index.html
-```
-
----
-
-## 💡 Usage Examples
-
-### Agent Usage
-
-```python
-# Example 1: Eligibility Check
-You: I'm 35 years old, earn $8000/month, have a credit score of 720,
-     work full-time for 5 years, and want to borrow $50,000 for 36 months.
-     Am I eligible?
-
-Agent: ## Loan Eligibility Assessment
-       **Status**: ELIGIBLE ✅
-       **Eligibility Score**: 85.2/100
-
-       ### Assessment Details:
-       - Age requirement: Met (35 years)
-       - Income requirement: Met ($8,000/month)
-       - Credit score: Good (720)
-       - Employment: Stable (5 years)
-       - DTI Ratio: 37.4% (within limit)
-
-# Example 2: Payment Calculation
-You: Calculate payment for $60,000 at 5.5% for 48 months
-
-Agent: ## Loan Payment Calculation
-       **Monthly Payment**: $1,388.31
-       **Total Payment**: $66,639.08
-       **Total Interest**: $6,639.08
-       **Interest as % of Principal**: 11.1%
-```
-
----
-
-## 🧪 Testing & Evaluation
-
-### Test Coverage
-
-- ✅ **42 unit tests** for business logic
-  - 16 tests for Loan Calculator
-  - 26 tests for Loan Eligibility
-- ✅ **4 DeepEval integration tests** for Agent quality
-  - Reference-free metrics evaluation
-  - Tool call validation
-  - Output keyword validation
-  - Individual case testing
-
-### Evaluation Metrics
-
-#### DeepEval Metrics
-| Metric | Description | Threshold |
-|--------|-------------|-----------|
-| Answer Relevancy | How relevant is the answer to the question | ≥ 70% |
-| Faithfulness | Answer is based on facts from context | ≥ 70% |
-| Hallucination | Answer contradicts the context | ≤ 50% (lower is better) |
-
-#### Tool Call Validation
-| Metric | Description |
-|--------|-------------|
-| Tool Selection | Verifies correct tool is called for each scenario |
-| Parameter Extraction | Validates all required parameters are extracted correctly |
-| Output Keywords | Ensures critical information appears in agent response |
-
-### Running Tests
-
-```bash
-# Run all tests (42 unit + 4 integration)
-uv run pytest tests/ -v
-
-# Run only unit tests (fast)
-uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
-
-# Run only DeepEval tests (slower, requires OpenAI API)
-uv run pytest tests/test_loan_advisor_agent.py -v
-```
+3. **Testing Pyramid**
+   - Fast unit tests for business logic (42 tests)
+   - Comprehensive DeepEval tests for agent quality (4 tests)
 
 ---
 
@@ -307,152 +396,74 @@ uv run pytest tests/test_loan_advisor_agent.py -v
 ```
 personal-loan-advisor-agent/
 ├── src/
-│   ├── agent/                      # Agent Layer
-│   │   ├── loan_advisor_agent.py   # Main Agent (AgentOS integration)
-│   │   └── loan_advisor_tools.py   # Tool wrappers for AgentOS
-│   ├── tools/                      # Business Logic Layer
-│   │   ├── loan_eligibility.py     # Eligibility checking logic
-│   │   └── loan_calculator.py      # Loan calculation logic
-│   └── utils/                      # Utilities
-│       ├── config.py               # Configuration management
-│       └── logger.py               # Logging system
-├── tests/                          # ⭐ Testing & Evaluation
-│   ├── test_loan_calculator_simple.py      # 16 unit tests for calculator
-│   ├── test_loan_eligibility_simple.py     # 26 unit tests for eligibility
-│   ├── test_loan_advisor_agent.py          # 4 DeepEval integration tests
-│   ├── deepeval_config.py                  # DeepEval configuration
-│   ├── README.md                           # Testing documentation
-│   └── README_EVALUATION.md                # Evaluation guide
-├── examples/                       # Usage examples
-│   └── config_usage_demo.py        # Configuration usage demo
-├── scripts/                        # Utility scripts
-│   └── check_config.py             # Configuration checker
-├── docs/                           # Documentation
-│   ├── EVALUATION_GUIDE.md         # Evaluation system guide
-│   ├── EVALUATION_THRESHOLDS.md    # Metric thresholds
-│   ├── SETUP_MONGODB.md            # MongoDB setup guide
-│   └── TEST_SUMMARY.md             # Test summary
-├── pytest.ini                      # Pytest configuration
-├── pyproject.toml                  # Project dependencies
-├── .env.example                    # Environment variables template
-└── README.md                       # This file
+│   ├── agent/                          # Agent Layer (AgentOS)
+│   │   ├── loan_advisor_agent.py       # Main agent (interactive + API)
+│   │   └── loan_advisor_tools.py       # Tool wrappers for AgentOS
+│   ├── tools/                          # Business Logic Layer
+│   │   ├── loan_eligibility.py         # Eligibility checking logic
+│   │   └── loan_calculator.py          # Loan calculation logic
+│   └── utils/                          # Utilities
+│       ├── config.py                   # Configuration management
+│       └── logger.py                   # Logging system
+├── tests/                              # Testing & Evaluation
+│   ├── test_loan_calculator_simple.py  # 16 calculator unit tests
+│   ├── test_loan_eligibility_simple.py # 26 eligibility unit tests
+│   ├── test_loan_advisor_agent.py      # 4 DeepEval integration tests
+│   └── deepeval_config.py              # DeepEval configuration
+├── .env.example                        # Environment variables template
+├── pyproject.toml                      # Project dependencies
+├── pytest.ini                          # Pytest configuration
+└── README.md                           # This file
 ```
 
 ---
 
-## 🎯 Framework & Design Choices
+## 🛠️ Development
 
-### 1. Why AgentOS 2.0?
+### Adding New Tools
 
-- **Modern & Production-Ready** - Built specifically for production AI agents
-- **Native Tool Calling** - Seamless OpenAI function calling integration
-- **MongoDB Integration** - Built-in session and conversation persistence
-- **Type Safety** - Strong Pydantic integration throughout
+1. **Create tool in `src/tools/`** (business logic)
+2. **Add wrapper in `src/agent/loan_advisor_tools.py`** (AgentOS integration)
+3. **Write unit tests** in `tests/`
+4. **Update DeepEval tests** to include new tool scenarios
 
-### 2. Two-Layer Architecture
+### Code Quality Standards
 
-**Clean separation of concerns:**
+- ✅ Type hints for all functions
+- ✅ Pydantic models for input validation
+- ✅ Comprehensive error handling
+- ✅ Structured logging
+- ✅ Unit tests for all business logic
+- ✅ DeepEval tests for agent changes
 
-1. **Tools Layer** (`src/tools/`)
-   - Pure business logic, framework-agnostic
-   - Can be reused in any framework (LangChain, LlamaIndex, etc.)
-   - Easy to unit test independently
-   - Follows Dependency Inversion Principle
+### Running Development Server
 
-2. **Agent Layer** (`src/agent/`)
-   - AgentOS framework integration
-   - Tool orchestration and calling
-   - Natural language understanding via GPT-4
+```bash
+# Interactive mode with auto-reload (for development)
+uv run python src/agent/loan_advisor_agent.py
 
-### 3. Testing & Evaluation Design
-
-**SOLID principles applied:**
-
-- **Single Responsibility** - Each test file has one clear purpose
-- **Context Reconstruction** - Re-execute tools to get accurate retrieval context for DeepEval
-- **Separation of Concerns** - Unit tests separate from integration tests
-
-**Key innovations:**
-- **Context Reconstruction from Tool Calls** - Solves the context parameter problem for Hallucination metric
-- **Automatic Tool Call Extraction** - Parses agent messages to verify correct tool selection
-- **Multiple Test Layers** - Unit tests for business logic + DeepEval for agent quality
+# API mode with auto-reload
+uv run uvicorn src.agent.loan_advisor_agent:app --reload
+```
 
 ---
 
-## 💼 For Interview: Key Talking Points
+## 🎓 What Makes This Project Stand Out
 
-### 1. Context Reconstruction Innovation (Biggest Technical Highlight)
-
-> **"I solved a critical challenge with DeepEval's Hallucination metric: it requires a `context` parameter, not just `retrieval_context`. To provide accurate context, I implemented an automatic context reconstruction system that re-executes the agent's tool calls with the exact parameters it used. This ensures the evaluation metrics have the precise information that was available to the agent when generating its response."**
-
-**Technical Details:**
-- Extract tool calls and parameters from agent responses
-- Re-execute tools with same parameters to reconstruct context
-- Provide both `context` and `retrieval_context` to LLMTestCase
-- Handles all 6 loan advisor tools correctly
-- Enables accurate Hallucination and Faithfulness evaluation
-
-### 2. Comprehensive Testing Strategy (Testing Strategy)
-
-> **"I implemented a multi-layer testing approach: 42 unit tests for pure business logic (loan calculations, eligibility rules), and 4 DeepEval integration tests that evaluate the agent's quality across Answer Relevancy, Faithfulness, and Hallucination metrics. The unit tests run fast (<1s) for rapid development, while DeepEval tests provide deep quality insights."**
-
-**Testing Layers:**
-- Unit tests: Pure business logic, framework-agnostic
-- DeepEval tests: Agent quality with LLM-as-judge
-- Tool call validation: Verify correct tool selection
-- Output validation: Keyword matching for critical info
-
-### 3. Clean Architecture (Architecture Design)
-
-> **"I used a two-layer architecture following the Dependency Inversion Principle. The tools layer contains pure business logic that's completely framework-agnostic - you could drop these tools into LangChain or LlamaIndex without any changes. The agent layer handles AgentOS integration and orchestration. This makes the code highly testable and maintainable."**
-
-**Benefits:**
-- Business logic can be reused across frameworks
-- Easy to unit test independently
-- Clear separation of concerns
-- Production-ready structure
-
-### 4. Production Readiness (Production-Ready Code)
-
-> **"This isn't just a demo - it's production-ready code. Every function has type hints, input validation with Pydantic, comprehensive error handling, structured logging, and environment-based configuration. The test coverage ensures reliability, and the DeepEval integration could easily be added to a CI/CD pipeline for continuous quality monitoring."**
-
-**Production Features:**
-- ✅ Type safety (100% type hints)
-- ✅ Input validation (Pydantic models)
-- ✅ Error handling & logging
-- ✅ Environment-based config
-- ✅ 46 automated tests
-- ✅ CI/CD ready
+1. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem by re-executing tool calls
+2. **Comprehensive Testing** - 42 unit tests + 4 DeepEval tests with LLM-as-judge evaluation
+3. **Production-Ready** - Type hints, validation, error handling, logging, environment-based config
+4. **Framework-Agnostic** - Business logic independent of AI framework
+5. **Dual Operating Modes** - Interactive CLI and REST API for flexible deployment
+6. **Complete Tool Coverage** - All 6 tools fully tested
 
 ---
 
-## 🔮 Future Enhancements
+## 📚 Additional Resources
 
-### Testing & Evaluation
-- [ ] Add more test cases covering edge scenarios
-- [ ] Implement performance benchmarks (response time, token usage)
-- [ ] Add bias detection metrics
-- [ ] Dashboard for test results visualization
-
-### Agent Features
-- [ ] Integrate credit scoring model (XGBoost)
-- [ ] Add RAG for bank policy documents
-- [ ] Multi-language support
-- [ ] Integration with real banking APIs
-
----
-
-## 📚 Documentation
-
-- **Testing Guides**:
-  - [tests/README.md](tests/README.md) - Complete testing documentation
-  - [tests/README_EVALUATION.md](tests/README_EVALUATION.md) - DeepEval evaluation guide
-  - [tests/README_TESTS.md](tests/README_TESTS.md) - Test implementation notes
-
-- **Setup Guides**:
-  - [docs/EVALUATION_GUIDE.md](docs/EVALUATION_GUIDE.md) - Evaluation system guide
-  - [docs/SETUP_MONGODB.md](docs/SETUP_MONGODB.md) - MongoDB configuration
-  - [docs/TEST_SUMMARY.md](docs/TEST_SUMMARY.md) - Test summary
+- [AgentOS Documentation](https://docs.agno.com)
+- [DeepEval Documentation](https://docs.confident-ai.com/)
+- [OpenAI API Documentation](https://platform.openai.com/docs)
 
 ---
 
@@ -464,22 +475,13 @@ MIT License
 
 ## 🤝 Contributing
 
-This is a portfolio project demonstrating production-ready AI agent development with comprehensive testing. For production use, contributions would follow:
-- Unit tests required for all business logic
-- DeepEval integration tests for agent changes
-- Type hints and input validation
-- Code review process
-- Documentation updates
+This is a portfolio project demonstrating production-ready AI agent development. For contributions:
 
----
-
-## 🎓 What Makes This Project Stand Out
-
-1. **Context Reconstruction Innovation** - Solved the DeepEval Hallucination metric context problem by re-executing tool calls
-2. **Multi-Layer Testing** - 42 unit tests + 4 DeepEval integration tests
-3. **Framework-Agnostic Design** - Business logic independent of AI framework
-4. **Production-Ready Code** - Type hints, validation, error handling, logging throughout
-5. **Clear Documentation** - Comprehensive guides for setup, testing, and evaluation
+1. Fork the repository
+2. Create a feature branch
+3. Add unit tests for business logic changes
+4. Add DeepEval tests for agent changes
+5. Submit a pull request
 
 ---
 
