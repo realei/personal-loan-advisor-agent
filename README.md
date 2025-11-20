@@ -123,27 +123,104 @@ cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 ```
 
-### Running the Agent
+## 🎮 Usage
+
+### Interactive Mode (Command Line Chat)
+
+Start a conversational interface in your terminal:
 
 ```bash
-# Interactive mode
 uv run python src/agent/loan_advisor_agent.py
 ```
 
-### Running Tests
+**Features:**
+- Real-time chat interface
+- Session persistence in MongoDB
+- Tool call execution and display
+- Natural language loan queries
+
+**Example interaction:**
+```
+You: I want to borrow $50,000 for 36 months at 5% interest. What's my monthly payment?
+Agent: [Calculates and displays payment breakdown]
+```
+
+### API Mode (REST API Server)
+
+Launch the FastAPI server for programmatic access:
 
 ```bash
-# Run all tests
-uv run pytest tests/ -v
+uv run python src/agent/loan_advisor_agent.py --api
+```
 
-# Run unit tests only
+**Endpoints:**
+- API Server: `http://localhost:8000`
+- Interactive API Docs: `http://localhost:8000/docs`
+- OpenAPI Schema: `http://localhost:8000/openapi.json`
+
+**Use cases:**
+- Integrate with web/mobile applications
+- Batch processing of loan queries
+- Microservice deployment
+
+## 🧪 Testing
+
+### Unit Tests (Business Logic)
+
+Fast, isolated tests for core loan calculation and eligibility logic:
+
+```bash
+# Run all unit tests (42 tests, ~0.3s)
 uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
 
-# Run DeepEval integration tests
+# Loan calculator tests only (16 tests)
+uv run pytest tests/test_loan_calculator_simple.py -v
+
+# Eligibility checker tests only (26 tests)
+uv run pytest tests/test_loan_eligibility_simple.py -v
+
+# With coverage report
+uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=term-missing
+```
+
+### DeepEval Evaluation (Agent Quality)
+
+LLM-based evaluation using DeepEval metrics:
+
+```bash
+# Run all DeepEval tests (includes AI-powered metrics)
 uv run pytest tests/test_loan_advisor_agent.py -v
 
-# Run specific DeepEval test
+# Specific evaluation tests
 uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v
+uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
+uv run pytest tests/test_loan_advisor_agent.py::test_expected_output_keywords -v
+
+# Individual test case example
+uv run pytest tests/test_loan_advisor_agent.py::test_individual_case_example -v
+```
+
+**Evaluation Metrics:**
+- ✅ Answer Relevancy (≥70%)
+- ✅ Faithfulness (≥70%)
+- ✅ Hallucination Detection (≤50%)
+- ✅ Tool Call Accuracy
+- ✅ Output Keyword Validation
+
+### Complete Test Suite
+
+Run everything together:
+
+```bash
+# All tests (unit + evaluation)
+uv run pytest tests/ -v
+
+# Quick validation (unit tests only)
+uv run pytest tests/test_loan_*_simple.py -v
+
+# Generate HTML coverage report
+uv run pytest tests/ --cov=src --cov-report=html
+open htmlcov/index.html
 ```
 
 ---
