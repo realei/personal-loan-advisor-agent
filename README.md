@@ -1,43 +1,55 @@
 # 🏦 Personal Loan Advisor Agent
 
-AI-powered Personal Loan Advisory System built with **Agno 2.0** and **OpenAI GPT-4**
+Production-ready AI Loan Advisory System with **Complete Evaluation Framework**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Agno 2.0](https://img.shields.io/badge/Agno-2.0-green.svg)](https://github.com/agno-agi/agno)
-[![OpenAI GPT-4](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)](https://openai.com/)
+[![Agno 2.0](https://img.shields.io/badge/Agno-2.0-green.svg)](https://docs.agno.com)
+[![DeepEval](https://img.shields.io/badge/DeepEval-Latest-purple.svg)](https://docs.confident-ai.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-green.svg)](https://www.mongodb.com/)
+
+An AI-powered loan advisory system built with **AgentOS 2.0** and **GPT-4**, designed to help customers make informed personal loan decisions. This production-ready system combines intelligent loan advisory capabilities with a comprehensive evaluation framework using **DeepEval** for quality assurance.
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+  - [Interactive Mode](#1️⃣-interactive-mode-cli-chat)
+  - [API Mode](#2️⃣-api-mode-rest-api-server)
+- [Testing](#-testing)
+  - [Unit Tests](#1️⃣-unit-tests)
+  - [DeepEval Evaluation](#2️⃣-deepeval-evaluation)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Development](#-development)
 
 ---
 
-## 📋 Overview
+## ✨ Features
 
-This is a **production-ready MVP** of an intelligent loan advisory agent designed for consumer banking applications. The agent helps customers understand their loan options, assess eligibility, and make informed borrowing decisions.
+### 💼 Loan Advisory Capabilities
 
-### ✨ Key Features
+This agent provides **6 loan advisory tools**:
 
-- ✅ **Loan Eligibility Assessment** - Rule-based checks (age, income, credit score, DTI ratio)
-- 💰 **Payment Calculations** - Accurate EMI calculations using standard financial formulas
-- 📊 **Amortization Schedules** - Detailed month-by-month payment breakdowns
-- 📈 **Affordability Analysis** - DTI ratio assessment and recommendations
-- 🔄 **Loan Comparison** - Compare different term options side-by-side
-- 🎯 **Max Loan Calculator** - Find maximum affordable loan amount
+1. **Check Loan Eligibility** - Evaluate customer profiles against banking criteria (age, income, credit score, employment, DTI ratio)
+2. **Calculate Loan Payment** - Compute accurate monthly payments, total costs, and interest
+3. **Generate Payment Schedule** - Create detailed month-by-month amortization breakdowns
+4. **Check Affordability** - Analyze debt-to-income ratios
+5. **Compare Loan Terms** - Side-by-side comparison of different loan options
+6. **Calculate Max Loan Amount** - Find the maximum affordable loan
 
-### 🏗️ Architecture
+### 🔬 Evaluation Framework
 
-```
-┌─────────────────────────────────────┐
-│  Personal Loan Advisor Agent       │
-│  (Agno 2.0 + OpenAI GPT-4)         │
-└─────────────────┬───────────────────┘
-                  │
-        ┌─────────┼─────────┐
-        │         │         │
-    ┌───▼───┐ ┌───▼───┐ ┌───▼────┐
-    │ Loan  │ │ Loan  │ │ Future:│
-    │Eligib │ │Calcul │ │ Credit │
-    │ility  │ │ ator  │ │Scoring │
-    │ Tool  │ │ Tool  │ │(XGBoost)│
-    └───────┘ └───────┘ └────────┘
-```
+- **46 Automated Tests** (42 unit tests + 4 DeepEval integration tests)
+- **DeepEval Metrics** - Answer Relevancy ≥70%, Faithfulness ≥70%, Hallucination ≤50%
+- **Context Reconstruction** - Innovative approach to reconstruct context from tool call re-execution
+- **Tool Call Validation** - Automatic validation of tool selection and parameters
+
+### 🚀 Deployment Modes
+
+- **Interactive CLI** - Real-time chat interface for development and demos
+- **REST API** - FastAPI server for production integration
 
 ---
 
@@ -46,127 +58,336 @@ This is a **production-ready MVP** of an intelligent loan advisory agent designe
 ### Prerequisites
 
 - Python 3.11+
+- MongoDB (optional, for session persistence)
 - OpenAI API Key
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- [uv](https://github.com/astral-sh/uv) package manager (recommended)
 
 ### Installation
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone <repository-url>
 cd personal-loan-advisor-agent
 
-# Install dependencies
+# 2. Install dependencies using uv
 uv sync
 
-# Set up environment variables
+# 3. Set up environment variables
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Edit .env and add your OPENAI_API_KEY (required)
+
+# 4. (Optional) Start MongoDB for session persistence
+# See Configuration section below for MongoDB setup
 ```
 
-### Running the Agent
+### Quick Test
 
 ```bash
-# Start the interactive CLI
-uv run python main.py
+# Run unit tests to verify installation
+uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
 ```
 
 ---
 
-## 💡 Usage Examples
+## ⚙️ Configuration
 
-### Example 1: Eligibility Check
-```
-You: I'm 35 years old, earn $8000/month, have a credit score of 720,
-     work full-time for 5 years, and want to borrow $50,000 for 36 months.
-     Am I eligible?
+### Environment Variables (.env file)
 
-Agent: [Provides detailed eligibility assessment with score and recommendations]
-```
+Create a `.env` file from the template:
 
-### Example 2: Payment Calculation
-```
-You: Calculate my monthly payment for a $60,000 loan at 5.5% for 48 months
-
-Agent: [Shows monthly payment, total interest, and payment breakdown]
+```bash
+cp .env.example .env
 ```
 
-### Example 3: Affordability Check
-```
-You: I earn $10,000/month with $2,000 existing debt. Can I afford a
-     $70,000 loan at 4.99% for 60 months?
+#### Required Configuration
 
-Agent: [Analyzes DTI ratio and provides affordability assessment]
+```bash
+# OpenAI API Key (REQUIRED)
+OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+#### Optional Configuration
+
+**Model Settings:**
+```bash
+# Model for agent conversations (default: gpt-4o-mini)
+AGENT_MODEL=gpt-4o-mini
+
+# Model for DeepEval evaluation (default: gpt-4o-mini)
+DEEPEVAL_MODEL=gpt-4o-mini
+
+# LLM Temperature (default: 0.7)
+TEMPERATURE=0.7
+```
+
+**MongoDB Settings (Optional - for session persistence):**
+```bash
+# MongoDB connection URI
+MONGODB_URI=mongodb://admin:password@localhost:27017/
+
+# Database and collection names
+MONGODB_DATABASE=loan_advisor
+MONGODB_SESSION_COLLECTION=agno_sessions
+MONGODB_MEMORY_COLLECTION=agno_memories
+MONGODB_METRICS_COLLECTION=agno_metrics
+```
+
+**Loan Configuration (Optional - uses defaults if not set):**
+```bash
+MIN_AGE=18
+MAX_AGE=65
+MIN_INCOME_AED=5000
+MIN_CREDIT_SCORE=600
+MAX_DTI_RATIO=0.5
+MAX_LOAN_AMOUNT_AED=1000000
+```
+
+**DeepEval Thresholds (Optional):**
+```bash
+EVAL_THRESHOLD_ANSWER_RELEVANCY=0.7
+EVAL_THRESHOLD_FAITHFULNESS=0.75
+EVAL_THRESHOLD_HALLUCINATION=0.3
+```
+
+### MongoDB Setup (Optional)
+
+MongoDB is **optional**. The agent works without it, but you'll lose session persistence and conversation history.
+
+#### Option 1: Docker (Recommended)
+
+```bash
+# Start MongoDB using Docker
+docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  mongo:6.0
+```
+
+#### Option 2: Local Installation
+
+```bash
+# Install MongoDB (macOS)
+brew install mongodb-community@6.0
+brew services start mongodb-community@6.0
+
+# Install MongoDB (Ubuntu/Debian)
+sudo apt-get install mongodb
+sudo systemctl start mongodb
+```
+
+---
+
+## 🎮 Usage
+
+The agent can run in **two modes**: Interactive Mode (CLI chat) and API Mode (REST API server).
+
+### 1️⃣ Interactive Mode (CLI Chat)
+
+Start a conversational interface in your terminal:
+
+```bash
+uv run python src/agent/loan_advisor_agent.py
+```
+
+**Example conversation:**
+```
+You: I want to borrow $50,000 for 36 months at 5% interest. What's my monthly payment?
+
+Agent: ## Loan Payment Calculation
+
+**Loan Amount**: $50,000.00
+**Interest Rate**: 5.00% per year
+**Loan Term**: 36 months (3.0 years)
+
+### Monthly Payment: $1,498.88
+
+**Total Payment**: $53,959.68
+**Total Interest**: $3,959.68
+**Interest as % of Principal**: 7.9%
+```
+
+**Features:**
+- Real-time chat interface
+- Session persistence (if MongoDB is configured)
+- Tool execution displayed in real-time
+- Natural language queries
+- Type `exit` or `quit` to end the session
+
+**Use cases:**
+- Development and testing
+- Demos and presentations
+- Quick loan calculations
+- Debugging agent behavior
+
+---
+
+### 2️⃣ API Mode (REST API Server)
+
+Launch the FastAPI server for programmatic access:
+
+```bash
+uv run python src/agent/loan_advisor_agent.py --api
+```
+
+**Server endpoints:**
+- **API Server**: `http://localhost:8000`
+- **Interactive API Docs**: `http://localhost:8000/docs` (Swagger UI)
+- **OpenAPI Schema**: `http://localhost:8000/openapi.json`
+- **AgentOS UI**: `http://localhost:3000` (web interface)
+
+**Example API usage:**
+
+```bash
+# Create a new session
+curl -X POST "http://localhost:8000/sessions" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "user123"}'
+
+# Send a query
+curl -X POST "http://localhost:8000/sessions/{session_id}/runs" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Check eligibility for $30,000 loan, age 25, income $6000/month, credit score 720"
+  }'
+```
+
+**Use cases:**
+- Web/mobile application integration
+- Customer-facing loan advisory interfaces
+- Batch processing of loan queries
+- Production deployment
 
 ---
 
 ## 🧪 Testing
 
-The project follows **Test-Driven Development (TDD)** practices with comprehensive test coverage:
+The project includes **two testing layers**: Unit Tests (business logic) and DeepEval Tests (agent quality).
+
+### Test Summary
+
+| Test Type | Files | Count | Coverage | Speed |
+|-----------|-------|-------|----------|-------|
+| **Unit Tests** | `test_loan_calculator_simple.py`<br>`test_loan_eligibility_simple.py` | **42 tests** | All 6 tools | ~0.3s |
+| **DeepEval Tests** | `test_loan_advisor_agent.py` | **4 tests** | Agent quality | ~30s |
+
+---
+
+### 1️⃣ Unit Tests
+
+Test the **core business logic** of all 6 tools (no AI, no agent).
+
+#### Run Unit Tests
 
 ```bash
-# Run all tests
-uv run pytest -v
+# Run all unit tests (42 tests, fast)
+uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
 
-# Run specific test suites
-uv run pytest tests/test_loan_eligibility.py -v
-uv run pytest tests/test_loan_calculator.py -v
+# Run with coverage report
+uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=term-missing
 
-# Run with coverage
-uv run pytest --cov=src --cov-report=html
+# Generate HTML coverage report
+uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=html
+open htmlcov/index.html
 ```
 
-### Test Coverage
+#### What's Tested
 
-- ✅ **16 tests** for LoanCalculatorTool
-- ✅ **18 tests** for LoanEligibilityTool
-- ✅ **Integration tests** for Agent workflow
-- ✅ **DeepEval** ready for quality assurance
+**Calculator Tests** (16 tests) - 5 tools:
+- ✅ Monthly payment calculations
+- ✅ Amortization schedules
+- ✅ DTI ratio and affordability
+- ✅ Loan term comparisons
+- ✅ Maximum loan calculations
+- ✅ Edge cases (zero interest, large amounts)
 
----
-
-## 🎯 Framework & Architecture Choices
-
-### Why Agno 2.0?
-
-1. **Modern & Lightweight**: Built specifically for production AI agents
-2. **Tool Integration**: Seamless function calling with OpenAI models
-3. **Type Safety**: Strong Pydantic integration
-4. **Performance**: Faster than LangChain for simple use cases
-
-### Why This Architecture?
-
-**Layered Approach**:
-1. **Rule Layer** (LoanEligibilityTool) - Fast, explainable, regulatory-compliant
-2. **Calculation Layer** (LoanCalculatorTool) - Accurate financial math
-3. **LLM Layer** (Agent) - Natural language understanding and orchestration
-
-This design ensures:
-- ✅ **Accuracy**: Financial calculations are deterministic
-- ✅ **Explainability**: Clear rules for loan decisions
-- ✅ **Compliance**: Meets banking regulatory requirements
-- ✅ **Flexibility**: Easy to add ML models later
+**Eligibility Tests** (26 tests) - 1 tool:
+- ✅ Age requirements
+- ✅ Income thresholds
+- ✅ Credit score validation
+- ✅ Employment status
+- ✅ DTI limits
+- ✅ Boundary conditions
 
 ---
 
-## 🔮 Future Enhancements
+### 2️⃣ DeepEval Evaluation
 
-### Day 2 - ML Integration
-- [ ] Integrate XGBoost credit scoring model
-- [ ] Add historical loan data analysis
-- [ ] Portfolio insights for underwriters
+Evaluate the **complete agent system** using LLM-as-judge metrics.
 
-### Day 3 - UI & Visualization
-- [ ] AG-UI web interface
-- [ ] Chart.js amortization visualizations
-- [ ] Real-time loan comparison charts
+#### Run DeepEval Tests
 
-### Beyond MVP
-- [ ] Multi-language support
-- [ ] PDF report generation
-- [ ] Integration with banking APIs
-- [ ] Advanced risk models
+```bash
+# Run all DeepEval tests (requires OpenAI API key)
+uv run pytest tests/test_loan_advisor_agent.py -v
+
+# Run specific tests
+uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v
+uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
+```
+
+#### Evaluation Metrics
+
+| Metric | Threshold | Purpose |
+|--------|-----------|---------|
+| **Answer Relevancy** | ≥ 70% | Ensures agent stays on topic |
+| **Faithfulness** | ≥ 70% | Response based on facts from tools |
+| **Hallucination** | ≤ 50% | Prevents false claims |
+| **Tool Call Accuracy** | 100% | Validates correct tool selection |
+| **Output Keywords** | 100% | Critical information present |
+
+#### Run All Tests
+
+```bash
+# Run everything (46 tests total)
+uv run pytest tests/ -v
+
+# Quick validation (unit tests only)
+uv run pytest tests/test_loan_*_simple.py -v
+```
+
+---
+
+## 🏗️ Architecture
+
+### System Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Personal Loan Advisor System               │
+└───────────────┬─────────────────────────────────────────┘
+                │
+    ┌───────────┴───────────┐
+    │                       │
+┌───▼────┐            ┌─────▼──────┐
+│ Tools  │            │   Agent    │
+│ Layer  │            │   Layer    │
+│        │            │            │
+│Business│◀──────────│ AgentOS    │
+│ Logic  │            │ 2.0 + GPT4 │
+└────────┘            │ + MongoDB  │
+                      └─────┬──────┘
+                            │
+                      ┌─────▼──────┐
+                      │  Testing   │
+                      │  DeepEval  │
+                      └────────────┘
+```
+
+### Key Design Principles
+
+1. **Two-Layer Architecture**
+   - **Tools Layer** (`src/tools/`) - Pure business logic, framework-agnostic
+   - **Agent Layer** (`src/agent/`) - AgentOS integration and orchestration
+
+2. **Dependency Inversion**
+   - Business logic doesn't depend on AI frameworks
+   - Tools can be reused in LangChain, LlamaIndex, etc.
+
+3. **Testing Pyramid**
+   - Fast unit tests for business logic (42 tests)
+   - Comprehensive DeepEval tests for agent quality (4 tests)
 
 ---
 
@@ -175,49 +396,74 @@ This design ensures:
 ```
 personal-loan-advisor-agent/
 ├── src/
-│   ├── tools/
-│   │   ├── loan_eligibility.py      # Rule-based eligibility checks
-│   │   └── loan_calculator.py       # Financial calculations
-│   ├── agent/
-│   │   └── personal_loan_agent.py   # Main Agno agent
-│   ├── utils/
-│   │   └── config.py                # Configuration management
-│   └── evaluation/                   # DeepEval tests (coming soon)
-├── tests/
-│   ├── test_loan_eligibility.py
-│   ├── test_loan_calculator.py
-│   └── test_agent_integration.py
-├── notebooks/
-│   └── 01_loan_data_eda.ipynb       # Data exploration
-├── main.py                           # CLI entry point
-└── README.md
+│   ├── agent/                          # Agent Layer (AgentOS)
+│   │   ├── loan_advisor_agent.py       # Main agent (interactive + API)
+│   │   └── loan_advisor_tools.py       # Tool wrappers for AgentOS
+│   ├── tools/                          # Business Logic Layer
+│   │   ├── loan_eligibility.py         # Eligibility checking logic
+│   │   └── loan_calculator.py          # Loan calculation logic
+│   └── utils/                          # Utilities
+│       ├── config.py                   # Configuration management
+│       └── logger.py                   # Logging system
+├── tests/                              # Testing & Evaluation
+│   ├── test_loan_calculator_simple.py  # 16 calculator unit tests
+│   ├── test_loan_eligibility_simple.py # 26 eligibility unit tests
+│   ├── test_loan_advisor_agent.py      # 4 DeepEval integration tests
+│   └── deepeval_config.py              # DeepEval configuration
+├── .env.example                        # Environment variables template
+├── pyproject.toml                      # Project dependencies
+├── pytest.ini                          # Pytest configuration
+└── README.md                           # This file
 ```
 
 ---
 
-## 💼 For Interview: Key Talking Points
+## 🛠️ Development
 
-### 1. Framework Choice (Agno vs LangChain)
-- **Agno**: Simpler, faster for focused use cases
-- **LangChain**: More features but heavier
-- **Choice**: Agno 2.0 for production-ready MVP
+### Adding New Tools
 
-### 2. High-Accuracy Design
-- **Deterministic calculations**: No LLM for math
-- **Rule-based checks**: Explainable decisions
-- **Layered architecture**: Right tool for each task
+1. **Create tool in `src/tools/`** (business logic)
+2. **Add wrapper in `src/agent/loan_advisor_tools.py`** (AgentOS integration)
+3. **Write unit tests** in `tests/`
+4. **Update DeepEval tests** to include new tool scenarios
 
-### 3. Evaluation Methodology
-- **Unit tests**: 34+ tests, >90% coverage
-- **Integration tests**: End-to-end workflows
-- **DeepEval ready**: Quality metrics framework
+### Code Quality Standards
 
-### 4. Production Readiness
-- ✅ Error handling
-- ✅ Input validation (Pydantic)
-- ✅ Logging & debugging
-- ✅ Configuration management
-- ✅ Type hints throughout
+- ✅ Type hints for all functions
+- ✅ Pydantic models for input validation
+- ✅ Comprehensive error handling
+- ✅ Structured logging
+- ✅ Unit tests for all business logic
+- ✅ DeepEval tests for agent changes
+
+### Running Development Server
+
+```bash
+# Interactive mode with auto-reload (for development)
+uv run python src/agent/loan_advisor_agent.py
+
+# API mode with auto-reload
+uv run uvicorn src.agent.loan_advisor_agent:app --reload
+```
+
+---
+
+## 🎓 What Makes This Project Stand Out
+
+1. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem by re-executing tool calls
+2. **Comprehensive Testing** - 42 unit tests + 4 DeepEval tests with LLM-as-judge evaluation
+3. **Production-Ready** - Type hints, validation, error handling, logging, environment-based config
+4. **Framework-Agnostic** - Business logic independent of AI framework
+5. **Dual Operating Modes** - Interactive CLI and REST API for flexible deployment
+6. **Complete Tool Coverage** - All 6 tools fully tested
+
+---
+
+## 📚 Additional Resources
+
+- [AgentOS Documentation](https://docs.agno.com)
+- [DeepEval Documentation](https://docs.confident-ai.com/)
+- [OpenAI API Documentation](https://platform.openai.com/docs)
 
 ---
 
@@ -229,18 +475,16 @@ MIT License
 
 ## 🤝 Contributing
 
-This is an interview assignment project. For the production version, contributions would follow standard PR workflows with:
-- Unit tests required
-- Code review process
-- CI/CD integration
-- Documentation updates
+This is a portfolio project demonstrating production-ready AI agent development. For contributions:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add unit tests for business logic changes
+4. Add DeepEval tests for agent changes
+5. Submit a pull request
 
 ---
 
-## 📞 Support
+**Built with ❤️ using AgentOS 2.0, OpenAI GPT-4, DeepEval, MongoDB, and modern Python practices**
 
-For questions about this implementation, please refer to the documentation or raise an issue.
-
----
-
-**Built with ❤️ using Agno 2.0, OpenAI GPT-4, and modern Python practices**
+*Demonstrating production-level AI agent development with comprehensive testing and evaluation*
