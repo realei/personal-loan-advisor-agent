@@ -102,10 +102,15 @@ loan_advisor_agent = Agent(
         compare_loan_terms,
         calculate_max_affordable_loan,
     ],
-    # System prompt
-    instructions=SYSTEM_INSTRUCTIONS,
+    add_datetime_to_context=True,
+    add_session_state_to_context=True,
+    enable_session_summaries=True,
+    add_session_summary_to_context=True,
     # Important for UI: Enable conversation history
     add_history_to_context=True,
+    read_chat_history=True,
+    # System prompt
+    instructions=SYSTEM_INSTRUCTIONS,
     # Number of previous messages to include
     num_history_runs=10,
     # Format responses in markdown for UI display
@@ -113,6 +118,9 @@ loan_advisor_agent = Agent(
 )
 
 # Create AgentOS instance for UI
+# Note: Bearer token authentication is automatically enabled when OS_SECURITY_KEY
+# environment variable is set. All API requests will then require:
+# Authorization: Bearer <your_key>
 agent_os = AgentOS(
     agents=[loan_advisor_agent],
     description="Personal Loan Advisor - AI-powered loan consultation system",
