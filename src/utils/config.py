@@ -100,6 +100,10 @@ class APIConfig(BaseModel):
         default_factory=lambda: os.getenv("OPENAI_API_KEY", ""),
         description="OpenAI API key",
     )
+    os_security_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("OS_SECURITY_KEY"),
+        description="AgentOS security key for API authentication (optional)",
+    )
     deepeval_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("DEEPEVAL_API_KEY"),
         description="DeepEval API key (optional)",
