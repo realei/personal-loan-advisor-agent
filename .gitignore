@@ -109,3 +109,6 @@ dmypy.json
 .ruff_cache/
 # Deepeval
 .deepeval/
+
+# Interview preparation (personal notes)
+INTERVIEW_PREP.md
