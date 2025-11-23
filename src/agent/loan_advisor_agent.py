@@ -7,10 +7,12 @@ This module is designed to work seamlessly with AgentOS UI:
 - Compatible with AgentOS UI's session tracking
 """
 
+import os
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.db.mongo import MongoDb
 from agno.os import AgentOS
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.agent.loan_advisor_tools import (
     check_loan_eligibility,
@@ -128,6 +130,20 @@ agent_os = AgentOS(
 
 # Get the FastAPI app
 app = agent_os.get_app()
+
+# Configure CORS for AgentUI access
+# Allow AgentUI to connect from any origin (localhost or deployed)
+# In production, you can restrict origins via ALLOWED_ORIGINS environment variable
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins if allowed_origins != ["*"] else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+logger.info(f"CORS configured with allowed origins: {allowed_origins}")
 
 # The AgentOS UI will automatically:
 # 1. Create a chat interface at http://localhost:3000
