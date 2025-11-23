@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = [
+    "curl -LsSf https://astral.sh/uv/install.sh | sh",
+    ". $HOME/.cargo/env",
+    "uv sync --no-dev"
+]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "uv run uvicorn src.agent.loan_advisor_agent:app --host 0.0.0.0 --port $PORT"
