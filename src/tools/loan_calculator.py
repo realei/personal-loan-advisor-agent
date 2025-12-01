@@ -5,6 +5,11 @@ This tool provides:
 - Total interest calculation
 - Loan amortization schedule
 - Affordability assessment
+
+Refactored to use numpy-financial via FinancialEngine for:
+- Industry-standard calculations (Excel-compatible)
+- Better performance (vectorized operations)
+- Easier maintenance and auditing
 """
 
 from dataclasses import dataclass
@@ -12,6 +17,8 @@ from typing import Optional
 
 import pandas as pd
 from pydantic import BaseModel, Field
+
+from .financial import engine
 
 
 @dataclass
@@ -49,7 +56,11 @@ class LoanRequest(BaseModel):
 
 
 class LoanCalculatorTool:
-    """Tool for calculating loan payments and schedules."""
+    """Tool for calculating loan payments and schedules.
+
+    Uses FinancialEngine internally for numpy-financial based calculations.
+    Public interface remains unchanged for backward compatibility.
+    """
 
     def __init__(self, max_dti_ratio: float = 0.5):
         """Initialize loan calculator.
@@ -60,7 +71,7 @@ class LoanCalculatorTool:
         self.max_dti_ratio = max_dti_ratio
 
     def calculate_monthly_payment(self, loan_request: LoanRequest) -> LoanCalculation:
-        """Calculate monthly EMI payment using standard formula.
+        """Calculate monthly EMI payment using numpy-financial.
 
         Formula: EMI = P × r × (1 + r)^n / ((1 + r)^n - 1)
         Where:
@@ -78,14 +89,12 @@ class LoanCalculatorTool:
         annual_rate = loan_request.annual_interest_rate
         n = loan_request.loan_term_months
 
-        # Calculate monthly interest rate
-        r = annual_rate / 12
-
-        # EMI formula
-        if r == 0:  # Interest-free loan
-            monthly_payment = P / n
-        else:
-            monthly_payment = (P * r * (1 + r) ** n) / ((1 + r) ** n - 1)
+        # Use FinancialEngine for calculation
+        monthly_payment = engine.payment(
+            principal=P,
+            rate=annual_rate,
+            periods=n
+        )
 
         # Calculate totals
         total_payment = monthly_payment * n
@@ -98,13 +107,15 @@ class LoanCalculatorTool:
             total_principal=P,
             loan_term_months=n,
             annual_interest_rate=annual_rate,
-            effective_monthly_rate=r,
+            effective_monthly_rate=annual_rate / 12,
         )
 
     def generate_amortization_schedule(
         self, loan_request: LoanRequest
     ) -> AmortizationSchedule:
         """Generate detailed month-by-month amortization schedule.
+
+        Uses vectorized numpy-financial operations for better performance.
 
         Args:
             loan_request: Loan parameters
@@ -114,38 +125,12 @@ class LoanCalculatorTool:
         """
         calculation = self.calculate_monthly_payment(loan_request)
 
-        # Initialize schedule
-        schedule_data = []
-        remaining_balance = loan_request.loan_amount
-        monthly_payment = calculation.monthly_payment
-        monthly_rate = calculation.effective_monthly_rate
-
-        for month in range(1, loan_request.loan_term_months + 1):
-            # Calculate interest for this month
-            interest_payment = remaining_balance * monthly_rate
-
-            # Calculate principal payment
-            principal_payment = monthly_payment - interest_payment
-
-            # Update balance
-            remaining_balance -= principal_payment
-
-            # Handle rounding errors in final payment
-            if month == loan_request.loan_term_months:
-                principal_payment += remaining_balance
-                remaining_balance = 0
-
-            schedule_data.append(
-                {
-                    "month": month,
-                    "payment": monthly_payment,
-                    "principal": principal_payment,
-                    "interest": interest_payment,
-                    "balance": max(0, remaining_balance),
-                }
-            )
-
-        schedule_df = pd.DataFrame(schedule_data)
+        # Use FinancialEngine for vectorized amortization table
+        schedule_df = engine.amortization_table(
+            principal=loan_request.loan_amount,
+            rate=loan_request.annual_interest_rate,
+            periods=loan_request.loan_term_months
+        )
 
         return AmortizationSchedule(schedule=schedule_df, summary=calculation)
 
@@ -244,6 +229,8 @@ class LoanCalculatorTool:
     ) -> dict:
         """Calculate maximum affordable loan amount.
 
+        Uses numpy-financial's PV function for reverse EMI calculation.
+
         Args:
             monthly_income: Monthly income
             annual_interest_rate: Annual interest rate
@@ -263,15 +250,12 @@ class LoanCalculatorTool:
                 "message": "Existing debt already exceeds recommended DTI ratio",
             }
 
-        # Reverse EMI formula to find principal
-        # P = EMI × ((1 + r)^n - 1) / (r × (1 + r)^n)
-        r = annual_interest_rate / 12
-        n = loan_term_months
-
-        if r == 0:
-            max_principal = max_monthly_payment * n
-        else:
-            max_principal = (max_monthly_payment * ((1 + r) ** n - 1)) / (r * (1 + r) ** n)
+        # Use FinancialEngine for reverse calculation
+        max_principal = engine.max_principal(
+            payment=max_monthly_payment,
+            rate=annual_interest_rate,
+            periods=loan_term_months
+        )
 
         return {
             "max_loan_amount": max_principal,

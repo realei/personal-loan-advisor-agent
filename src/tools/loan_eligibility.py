@@ -6,6 +6,9 @@ This tool implements banking-grade eligibility criteria including:
 - Credit score thresholds
 - Debt-to-Income (DTI) ratio validation
 - Employment status checks
+
+Refactored to use FinancialEngine for DTI calculations,
+ensuring consistency with LoanCalculatorTool.
 """
 
 from dataclasses import dataclass
@@ -13,6 +16,8 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from .financial import engine
 
 
 class EmploymentStatus(str, Enum):
@@ -316,14 +321,12 @@ class LoanEligibilityTool:
         scores: list[float],
     ) -> bool:
         """Check Debt-to-Income ratio."""
-        # Estimate monthly payment (simplified, actual calculation in LoanCalculatorTool)
-        monthly_rate = 0.05 / 12  # Assume 5% annual rate
-        n_payments = applicant.loan_term_months
-        estimated_payment = (
-            applicant.requested_loan_amount
-            * monthly_rate
-            * (1 + monthly_rate) ** n_payments
-        ) / ((1 + monthly_rate) ** n_payments - 1)
+        # Use FinancialEngine for consistent calculation with LoanCalculatorTool
+        estimated_payment = engine.payment(
+            principal=applicant.requested_loan_amount,
+            rate=0.05,  # Assume 5% annual rate for eligibility check
+            periods=applicant.loan_term_months
+        )
 
         total_monthly_debt = applicant.monthly_debt_obligations + estimated_payment
         dti_ratio = total_monthly_debt / applicant.monthly_income

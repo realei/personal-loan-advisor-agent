@@ -1,5 +1,6 @@
 """Tools for the Personal Loan Advisor Agent."""
 
+from .financial import FinancialEngine, engine
 from .loan_eligibility import (
     LoanEligibilityTool,
     ApplicantInfo,
@@ -15,11 +16,16 @@ from .loan_calculator import (
 )
 
 __all__ = [
+    # Financial engine
+    "FinancialEngine",
+    "engine",
+    # Eligibility
     "LoanEligibilityTool",
     "ApplicantInfo",
     "EmploymentStatus",
     "EligibilityStatus",
     "EligibilityResult",
+    # Calculator
     "LoanCalculatorTool",
     "LoanRequest",
     "LoanCalculation",
