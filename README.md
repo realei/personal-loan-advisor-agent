@@ -320,7 +320,7 @@ Evaluate the **complete agent system** using LLM-as-judge metrics.
 
 ```bash
 # Run all DeepEval tests (requires OpenAI API key)
-uv run pytest tests/test_loan_advisor_agent.py -v
+uv run pytest tests/test_loan_advisor_agent.py -v -s
 
 # Run specific tests
 uv run pytest tests/test_loan_advisor_agent.py::test_agent_with_reference_free_metrics -v
