@@ -1,11 +1,15 @@
-"""Loan Eligibility Tool - Rule-based eligibility checks for personal loans.
+"""Loan Eligibility Tool - Rule-based eligibility checks for multiple loan types.
 
 This tool implements banking-grade eligibility criteria including:
 - Age verification
 - Income requirements
 - Credit score thresholds
 - Debt-to-Income (DTI) ratio validation
+- Loan-to-Value (LTV) ratio validation (for secured loans)
 - Employment status checks
+
+Supports loan types: Personal, Mortgage, Auto
+All regulations are configurable via .env
 
 Refactored to use FinancialEngine for DTI calculations,
 ensuring consistency with LoanCalculatorTool.
@@ -18,6 +22,8 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from .financial import engine
+from .loan_types import LoanType
+from ..utils.config import config
 
 
 class EmploymentStatus(str, Enum):
@@ -412,3 +418,193 @@ class LoanEligibilityTool:
 
         scores.append(100.0)
         return True
+
+
+# =============================================================================
+# EXTENDED APPLICANT INFO FOR SECURED LOANS
+# =============================================================================
+
+class SecuredLoanApplicant(ApplicantInfo):
+    """Extended applicant info for secured loans (mortgage, auto)."""
+
+    loan_type: LoanType = Field(default=LoanType.PERSONAL, description="Type of loan")
+    asset_value: Optional[float] = Field(
+        default=None, gt=0, description="Value of asset (home price or car price)"
+    )
+    down_payment: Optional[float] = Field(
+        default=None, ge=0, description="Down payment amount"
+    )
+
+
+# =============================================================================
+# MORTGAGE ELIGIBILITY CHECKER
+# =============================================================================
+
+class MortgageEligibilityTool(LoanEligibilityTool):
+    """Eligibility checker for mortgage/home loans.
+
+    Extends base eligibility with:
+    - LTV (Loan-to-Value) validation
+    - Longer employment history requirements
+    - Extended age at maturity
+    """
+
+    def __init__(self):
+        """Initialize with mortgage-specific config."""
+        cfg = config.mortgage
+        super().__init__(
+            min_age=18,
+            max_age=cfg.max_age_at_maturity,
+            min_monthly_income=cfg.min_income,
+            min_credit_score=cfg.min_credit_score,
+            max_dti_ratio=cfg.max_dti_ratio,
+            min_employment_length=cfg.min_employment_years,
+            max_loan_amount=cfg.max_amount,
+        )
+        self.max_ltv_ratio = cfg.max_ltv_ratio
+        self.min_down_payment = cfg.min_down_payment
+
+    def check_eligibility(
+        self,
+        applicant: SecuredLoanApplicant,
+    ) -> EligibilityResult:
+        """Check mortgage eligibility including LTV validation.
+
+        Args:
+            applicant: SecuredLoanApplicant with asset_value and down_payment
+
+        Returns:
+            EligibilityResult with status, reasons, and recommendations
+        """
+        # First run base eligibility checks
+        base_result = super().check_eligibility(applicant)
+
+        # Add LTV check if asset value provided
+        if applicant.asset_value and applicant.down_payment is not None:
+            ltv_reasons = []
+            ltv_recommendations = []
+
+            ltv_ratio = (applicant.asset_value - applicant.down_payment) / applicant.asset_value
+
+            if ltv_ratio > self.max_ltv_ratio:
+                ltv_reasons.append(
+                    f"LTV ratio {ltv_ratio:.1%} exceeds maximum {self.max_ltv_ratio:.0%}"
+                )
+                min_down = applicant.asset_value * self.min_down_payment
+                ltv_recommendations.append(
+                    f"Increase down payment to at least ${min_down:,.0f} "
+                    f"({self.min_down_payment:.0%} of home price)"
+                )
+
+                return EligibilityResult(
+                    status=EligibilityStatus.NOT_ELIGIBLE,
+                    eligible=False,
+                    reasons=base_result.reasons + ltv_reasons,
+                    score=base_result.score * 0.8,  # Reduce score for LTV failure
+                    recommendations=base_result.recommendations + ltv_recommendations,
+                )
+
+        return base_result
+
+
+# =============================================================================
+# AUTO LOAN ELIGIBILITY CHECKER
+# =============================================================================
+
+class AutoLoanEligibilityTool(LoanEligibilityTool):
+    """Eligibility checker for auto/car loans.
+
+    Extends base eligibility with:
+    - LTV validation (less strict than mortgage)
+    - Vehicle-specific loan-to-income ratio
+    """
+
+    def __init__(self):
+        """Initialize with auto loan config."""
+        cfg = config.auto_loan
+        super().__init__(
+            min_age=18,
+            max_age=70,
+            min_monthly_income=cfg.min_income,
+            min_credit_score=cfg.min_credit_score,
+            max_dti_ratio=cfg.max_dti_ratio,
+            min_employment_length=1.0,
+            max_loan_amount=cfg.max_amount,
+        )
+        self.max_ltv_ratio = cfg.max_ltv_ratio
+        self.min_down_payment = cfg.min_down_payment
+
+    def check_eligibility(
+        self,
+        applicant: SecuredLoanApplicant,
+    ) -> EligibilityResult:
+        """Check auto loan eligibility including LTV validation.
+
+        Args:
+            applicant: SecuredLoanApplicant with asset_value and down_payment
+
+        Returns:
+            EligibilityResult with status, reasons, and recommendations
+        """
+        # First run base eligibility checks
+        base_result = super().check_eligibility(applicant)
+
+        # Add LTV check if asset value provided
+        if applicant.asset_value and applicant.down_payment is not None:
+            ltv_reasons = []
+            ltv_recommendations = []
+
+            ltv_ratio = (applicant.asset_value - applicant.down_payment) / applicant.asset_value
+
+            if ltv_ratio > self.max_ltv_ratio:
+                ltv_reasons.append(
+                    f"LTV ratio {ltv_ratio:.1%} exceeds maximum {self.max_ltv_ratio:.0%}"
+                )
+                min_down = applicant.asset_value * self.min_down_payment
+                ltv_recommendations.append(
+                    f"Increase down payment to at least ${min_down:,.0f} "
+                    f"({self.min_down_payment:.0%} of vehicle price)"
+                )
+
+                return EligibilityResult(
+                    status=EligibilityStatus.NOT_ELIGIBLE,
+                    eligible=False,
+                    reasons=base_result.reasons + ltv_reasons,
+                    score=base_result.score * 0.8,
+                    recommendations=base_result.recommendations + ltv_recommendations,
+                )
+
+        return base_result
+
+
+# =============================================================================
+# FACTORY FUNCTION - Get eligibility checker for loan type
+# =============================================================================
+
+def get_eligibility_checker(
+    loan_type: LoanType | str = LoanType.PERSONAL,
+) -> LoanEligibilityTool:
+    """Get an eligibility checker configured for a specific loan type.
+
+    Args:
+        loan_type: LoanType enum or string ('personal', 'mortgage', 'auto')
+
+    Returns:
+        Appropriate eligibility tool for the loan type
+    """
+    if isinstance(loan_type, str):
+        loan_type = LoanType(loan_type.lower())
+
+    if loan_type == LoanType.MORTGAGE:
+        return MortgageEligibilityTool()
+    elif loan_type == LoanType.AUTO:
+        return AutoLoanEligibilityTool()
+    else:
+        # Personal loan - use base config
+        cfg = config.personal_loan
+        return LoanEligibilityTool(
+            min_monthly_income=cfg.min_income,
+            min_credit_score=cfg.min_credit_score,
+            max_dti_ratio=cfg.max_dti_ratio,
+            max_loan_amount=cfg.max_amount,
+        )

@@ -1,10 +1,16 @@
-"""Loan Calculator Tool - Financial calculations for personal loans.
+"""Loan Calculator Tool - Financial calculations for multiple loan types.
 
 This tool provides:
 - Monthly EMI (Equated Monthly Installment) calculation
 - Total interest calculation
 - Loan amortization schedule
 - Affordability assessment
+- Home affordability calculation (with LTV/down payment)
+- Car loan comparison
+- Early payoff scenarios
+
+Supports loan types: Personal, Mortgage, Auto
+All regulations (DTI, LTV, rates) are configurable via .env
 
 Refactored to use numpy-financial via FinancialEngine for:
 - Industry-standard calculations (Excel-compatible)
@@ -19,6 +25,9 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from .financial import engine
+from .loan_types import LoanType
+from .loan_rules import get_mortgage_rule, get_auto_loan_rule
+from ..utils.config import config
 
 
 @dataclass
@@ -267,3 +276,375 @@ class LoanCalculatorTool:
             "annual_interest_rate": annual_interest_rate,
             "message": f"Based on {self.max_dti_ratio:.0%} DTI ratio, you can afford up to ${max_principal:,.2f}",
         }
+
+
+# =============================================================================
+# MORTGAGE / HOME LOAN FUNCTIONS
+# =============================================================================
+
+def calculate_home_affordability(
+    monthly_income: float,
+    existing_debt_payment: float = 0.0,
+    annual_interest_rate: float | None = None,
+    loan_term_months: int = 360,  # 30 years default
+    residency: str = "expat",
+    property_type: str = "first",
+    estimated_price: float = 0,
+) -> dict:
+    """Calculate maximum home price you can afford.
+
+    Uses rule-based LTV based on residency and property type.
+
+    Args:
+        monthly_income: Gross monthly income
+        existing_debt_payment: Existing monthly debt payments
+        annual_interest_rate: Annual rate (defaults to MORTGAGE_BASE_RATE)
+        loan_term_months: Loan term (default 30 years)
+        residency: 'citizen', 'expat', or 'non_resident' (default: 'expat')
+        property_type: 'first' or 'second' (default: 'first')
+        estimated_price: Estimated property price for rule matching
+
+    Returns:
+        Dict with max_home_price, max_loan, down_payment, monthly_payment
+    """
+    cfg = config.mortgage
+
+    if annual_interest_rate is None:
+        annual_interest_rate = cfg.base_rate
+
+    # Get applicable rule based on residency and property type
+    rule = get_mortgage_rule(residency, property_type, estimated_price)
+    max_ltv = rule.max_ltv
+    min_down_pct = rule.min_down_payment
+
+    # Calculate max monthly payment based on DTI
+    max_dti = cfg.max_dti_ratio
+    max_total_debt = monthly_income * max_dti
+    max_mortgage_payment = max_total_debt - existing_debt_payment
+
+    if max_mortgage_payment <= 0:
+        return {
+            "affordable": False,
+            "message": "Existing debt exceeds DTI limit for mortgage",
+            "max_home_price": 0,
+            "max_loan_amount": 0,
+            "required_down_payment": 0,
+            "monthly_payment": 0,
+        }
+
+    # Calculate max loan amount
+    max_loan = engine.max_principal(
+        payment=max_mortgage_payment,
+        rate=annual_interest_rate,
+        periods=loan_term_months,
+    )
+
+    # Calculate max home price based on LTV
+    max_home_price = max_loan / max_ltv
+    required_down_payment = max_home_price * min_down_pct
+
+    return {
+        "affordable": True,
+        "max_home_price": round(max_home_price, 2),
+        "max_loan_amount": round(max_loan, 2),
+        "required_down_payment": round(required_down_payment, 2),
+        "down_payment_percentage": min_down_pct,
+        "monthly_payment": round(max_mortgage_payment, 2),
+        "dti_ratio": max_dti,
+        "ltv_ratio": max_ltv,
+        "residency": residency,
+        "property_type": property_type,
+        "annual_interest_rate": annual_interest_rate,
+        "loan_term_months": loan_term_months,
+        "loan_term_years": loan_term_months // 12,
+        "message": (
+            f"As {residency} buying {property_type} home with ${monthly_income:,.0f}/month income, "
+            f"you can afford up to ${max_home_price:,.0f} "
+            f"(LTV: {max_ltv:.0%}, down payment: ${required_down_payment:,.0f})"
+        ),
+    }
+
+
+def calculate_mortgage_payment(
+    home_price: float,
+    down_payment: float | None = None,
+    annual_interest_rate: float | None = None,
+    loan_term_months: int = 360,
+    residency: str = "expat",
+    property_type: str = "first",
+) -> dict:
+    """Calculate mortgage payment for a specific home price.
+
+    Uses rule-based LTV based on residency and property type.
+
+    Args:
+        home_price: Total home price
+        down_payment: Down payment amount (defaults to minimum from rule)
+        annual_interest_rate: Annual rate (defaults to MORTGAGE_BASE_RATE)
+        loan_term_months: Loan term (default 30 years)
+        residency: 'citizen', 'expat', or 'non_resident' (default: 'expat')
+        property_type: 'first' or 'second' (default: 'first')
+
+    Returns:
+        Dict with loan details, monthly payment, LTV ratio
+    """
+    cfg = config.mortgage
+
+    if annual_interest_rate is None:
+        annual_interest_rate = cfg.base_rate
+
+    # Get applicable rule based on residency and property type
+    rule = get_mortgage_rule(residency, property_type, home_price)
+    max_ltv = rule.max_ltv
+    min_down_pct = rule.min_down_payment
+
+    # Calculate down payment
+    if down_payment is None:
+        down_payment = home_price * min_down_pct
+
+    # Validate LTV
+    loan_amount = home_price - down_payment
+    ltv_ratio = loan_amount / home_price
+
+    if ltv_ratio > max_ltv:
+        min_required_down = home_price * min_down_pct
+        return {
+            "valid": False,
+            "message": (
+                f"LTV {ltv_ratio:.1%} exceeds maximum {max_ltv:.0%} for {residency} "
+                f"buying {property_type} home. Need at least ${min_required_down:,.0f} "
+                f"({min_down_pct:.0%}) down payment."
+            ),
+        }
+
+    # Calculate payment
+    monthly_payment = engine.payment(
+        principal=loan_amount,
+        rate=annual_interest_rate,
+        periods=loan_term_months,
+    )
+
+    total_payment = monthly_payment * loan_term_months
+    total_interest = total_payment - loan_amount
+
+    return {
+        "valid": True,
+        "home_price": home_price,
+        "down_payment": down_payment,
+        "down_payment_percentage": down_payment / home_price,
+        "loan_amount": loan_amount,
+        "ltv_ratio": ltv_ratio,
+        "max_ltv_allowed": max_ltv,
+        "residency": residency,
+        "property_type": property_type,
+        "monthly_payment": round(monthly_payment, 2),
+        "total_payment": round(total_payment, 2),
+        "total_interest": round(total_interest, 2),
+        "annual_interest_rate": annual_interest_rate,
+        "loan_term_months": loan_term_months,
+        "loan_term_years": loan_term_months // 12,
+    }
+
+
+# =============================================================================
+# AUTO / CAR LOAN FUNCTIONS
+# =============================================================================
+
+def calculate_car_loan(
+    car_price: float,
+    down_payment: float | None = None,
+    annual_interest_rate: float | None = None,
+    loan_term_months: int = 60,
+) -> dict:
+    """Calculate car loan payment.
+
+    Args:
+        car_price: Vehicle price
+        down_payment: Down payment (defaults to minimum from config)
+        annual_interest_rate: Annual rate (defaults to AUTO_BASE_RATE)
+        loan_term_months: Loan term (default 5 years)
+
+    Returns:
+        Dict with loan details and monthly payment
+    """
+    cfg = config.auto_loan
+
+    if annual_interest_rate is None:
+        annual_interest_rate = cfg.base_rate
+
+    # Calculate down payment
+    if down_payment is None:
+        down_payment = car_price * cfg.min_down_payment
+
+    # Validate LTV
+    loan_amount = car_price - down_payment
+    ltv_ratio = loan_amount / car_price
+
+    if ltv_ratio > cfg.max_ltv_ratio:
+        return {
+            "valid": False,
+            "message": f"LTV {ltv_ratio:.1%} exceeds maximum {cfg.max_ltv_ratio:.0%}. "
+                       f"Need at least ${car_price * cfg.min_down_payment:,.0f} down payment.",
+        }
+
+    # Calculate payment
+    monthly_payment = engine.payment(
+        principal=loan_amount,
+        rate=annual_interest_rate,
+        periods=loan_term_months,
+    )
+
+    total_payment = monthly_payment * loan_term_months
+    total_interest = total_payment - loan_amount
+
+    return {
+        "valid": True,
+        "car_price": car_price,
+        "down_payment": down_payment,
+        "down_payment_percentage": down_payment / car_price,
+        "loan_amount": loan_amount,
+        "ltv_ratio": ltv_ratio,
+        "monthly_payment": round(monthly_payment, 2),
+        "total_payment": round(total_payment, 2),
+        "total_interest": round(total_interest, 2),
+        "annual_interest_rate": annual_interest_rate,
+        "loan_term_months": loan_term_months,
+    }
+
+
+def compare_car_loan_terms(
+    car_price: float,
+    down_payment: float | None = None,
+    annual_interest_rate: float | None = None,
+    terms: list[int] | None = None,
+) -> pd.DataFrame:
+    """Compare car loan options across different terms.
+
+    Args:
+        car_price: Vehicle price
+        down_payment: Down payment amount
+        annual_interest_rate: Annual rate (defaults to AUTO_BASE_RATE)
+        terms: List of terms in months (default: [36, 48, 60, 72])
+
+    Returns:
+        DataFrame comparing different loan terms
+    """
+    cfg = config.auto_loan
+
+    if annual_interest_rate is None:
+        annual_interest_rate = cfg.base_rate
+
+    if terms is None:
+        terms = [36, 48, 60, 72]
+
+    if down_payment is None:
+        down_payment = car_price * cfg.min_down_payment
+
+    loan_amount = car_price - down_payment
+    comparisons = []
+
+    for term in terms:
+        monthly_payment = engine.payment(
+            principal=loan_amount,
+            rate=annual_interest_rate,
+            periods=term,
+        )
+        total_payment = monthly_payment * term
+        total_interest = total_payment - loan_amount
+
+        comparisons.append({
+            "term_months": term,
+            "term_years": term / 12,
+            "monthly_payment": round(monthly_payment, 2),
+            "total_payment": round(total_payment, 2),
+            "total_interest": round(total_interest, 2),
+            "interest_percentage": round((total_interest / loan_amount) * 100, 2),
+        })
+
+    return pd.DataFrame(comparisons)
+
+
+# =============================================================================
+# EARLY PAYOFF CALCULATOR
+# =============================================================================
+
+def calculate_early_payoff(
+    loan_amount: float,
+    annual_interest_rate: float,
+    loan_term_months: int,
+    extra_monthly_payment: float,
+) -> dict:
+    """Calculate savings from making extra monthly payments.
+
+    Args:
+        loan_amount: Original loan amount
+        annual_interest_rate: Annual interest rate
+        loan_term_months: Original loan term in months
+        extra_monthly_payment: Extra amount to pay each month
+
+    Returns:
+        Dict with payoff timeline, interest saved, and comparison
+    """
+    monthly_rate = annual_interest_rate / 12
+
+    # Original loan calculation
+    original_payment = engine.payment(
+        principal=loan_amount,
+        rate=annual_interest_rate,
+        periods=loan_term_months,
+    )
+    original_total_interest = (original_payment * loan_term_months) - loan_amount
+
+    # Calculate with extra payment
+    total_payment = original_payment + extra_monthly_payment
+    balance = loan_amount
+    months_paid = 0
+    total_interest_paid = 0.0
+
+    while balance > 0 and months_paid < loan_term_months:
+        months_paid += 1
+        interest = balance * monthly_rate
+        total_interest_paid += interest
+        principal_paid = min(total_payment - interest, balance)
+        balance = max(0, balance - principal_paid)
+
+    # Calculate savings
+    interest_saved = original_total_interest - total_interest_paid
+    months_saved = loan_term_months - months_paid
+
+    return {
+        "original_term_months": loan_term_months,
+        "new_term_months": months_paid,
+        "months_saved": months_saved,
+        "years_saved": round(months_saved / 12, 1),
+        "original_monthly_payment": round(original_payment, 2),
+        "new_monthly_payment": round(total_payment, 2),
+        "extra_monthly_payment": extra_monthly_payment,
+        "original_total_interest": round(original_total_interest, 2),
+        "new_total_interest": round(total_interest_paid, 2),
+        "interest_saved": round(interest_saved, 2),
+        "message": (
+            f"By paying ${extra_monthly_payment:,.0f} extra per month, you'll save "
+            f"${interest_saved:,.0f} in interest and pay off {months_saved} months earlier."
+        ),
+    }
+
+
+# =============================================================================
+# FACTORY FUNCTION - Get calculator with loan-type-specific config
+# =============================================================================
+
+def get_calculator(loan_type: LoanType | str = LoanType.PERSONAL) -> LoanCalculatorTool:
+    """Get a LoanCalculatorTool configured for a specific loan type.
+
+    Args:
+        loan_type: LoanType enum or string ('personal', 'mortgage', 'auto')
+
+    Returns:
+        LoanCalculatorTool with appropriate DTI ratio
+    """
+    if isinstance(loan_type, str):
+        loan_type = LoanType(loan_type.lower())
+
+    loan_cfg = config.get_loan_config(loan_type.value)
+    return LoanCalculatorTool(max_dti_ratio=loan_cfg.max_dti_ratio)

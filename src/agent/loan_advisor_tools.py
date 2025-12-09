@@ -1,13 +1,30 @@
-"""Personal Loan Advisor Tools - Standalone tool functions for Agno agent.
+"""Loan Advisor Tools - Standalone tool functions for Agno agent.
 
 This module defines all loan-related tools as standalone functions following
 Agno best practices. Tools are defined as simple functions without class wrapping.
+
+Supports loan types: Personal, Mortgage, Auto
 """
 
 from typing import Optional
 from agno.tools import tool
-from src.tools.loan_eligibility import LoanEligibilityTool, ApplicantInfo, EmploymentStatus
-from src.tools.loan_calculator import LoanCalculatorTool, LoanRequest
+from src.tools.loan_eligibility import (
+    LoanEligibilityTool,
+    ApplicantInfo,
+    EmploymentStatus,
+    get_eligibility_checker,
+)
+from src.tools.loan_calculator import (
+    LoanCalculatorTool,
+    LoanRequest,
+    get_calculator,
+    calculate_home_affordability,
+    calculate_mortgage_payment,
+    calculate_car_loan,
+    compare_car_loan_terms,
+    calculate_early_payoff,
+)
+from src.tools.loan_types import LoanType
 from src.utils.config import config
 from src.utils.logger import get_logger
 
@@ -393,6 +410,301 @@ def calculate_max_affordable_loan(
         return f"Error calculating max loan: {str(e)}"
 
 
+# =============================================================================
+# MORTGAGE / HOME LOAN TOOLS
+# =============================================================================
+
+@tool(name="calculate_home_affordability", show_result=True)
+def calculate_home_affordability_tool(
+    monthly_income: float,
+    residency: str = "expat",
+    property_type: str = "first",
+    existing_debt_payment: float = 0.0,
+    annual_interest_rate: Optional[float] = None,
+    loan_term_years: int = 30,
+) -> str:
+    """Calculate maximum home price you can afford based on income and residency.
+
+    LTV (Loan-to-Value) limits vary by residency status:
+    - UAE Citizen, first home ≤5M: 85% LTV (15% down)
+    - UAE Citizen, first home >5M: 80% LTV (20% down)
+    - Expat, first home: 80% LTV (20% down)
+    - Expat, second home: 65% LTV (35% down)
+    - Non-resident: 50% LTV (50% down)
+
+    Args:
+        monthly_income: Gross monthly income
+        residency: 'citizen', 'expat', or 'non_resident' (default: 'expat')
+        property_type: 'first' or 'second' home (default: 'first')
+        existing_debt_payment: Existing monthly debt payments (default: 0)
+        annual_interest_rate: Annual rate (optional, uses bank default)
+        loan_term_years: Loan term in years (default: 30)
+
+    Returns:
+        Maximum home price, loan amount, down payment, and monthly payment
+    """
+    try:
+        result = calculate_home_affordability(
+            monthly_income=monthly_income,
+            existing_debt_payment=existing_debt_payment,
+            annual_interest_rate=annual_interest_rate,
+            loan_term_months=loan_term_years * 12,
+            residency=residency,
+            property_type=property_type,
+        )
+
+        if not result.get("affordable", True):
+            return f"## Home Affordability\n\n{result['message']}"
+
+        response = f"## Home Affordability Analysis\n\n"
+        response += f"**Applicant**: {residency.title()} buying {property_type} home\n"
+        response += f"**Maximum Home Price**: ${result['max_home_price']:,.0f}\n"
+        response += f"**Maximum Loan Amount**: ${result['max_loan_amount']:,.0f}\n"
+        response += f"**Required Down Payment**: ${result['required_down_payment']:,.0f} ({result['down_payment_percentage']:.0%})\n"
+        response += f"**Monthly Payment**: ${result['monthly_payment']:,.0f}\n\n"
+        response += f"**Interest Rate**: {result['annual_interest_rate']:.2%}\n"
+        response += f"**Loan Term**: {result['loan_term_years']} years\n"
+        response += f"**Max DTI Used**: {result['dti_ratio']:.0%}\n"
+        response += f"**Max LTV for {residency}/{property_type}**: {result['ltv_ratio']:.0%}\n\n"
+        response += f"### Summary:\n{result['message']}\n"
+
+        logger.info(f"Home affordability: {residency}/{property_type}, income=${monthly_income}, max_home=${result['max_home_price']}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error calculating home affordability: {str(e)}")
+        return f"Error calculating home affordability: {str(e)}"
+
+
+@tool(name="calculate_mortgage_payment", show_result=True)
+def calculate_mortgage_payment_tool(
+    home_price: float,
+    residency: str = "expat",
+    property_type: str = "first",
+    down_payment: Optional[float] = None,
+    annual_interest_rate: Optional[float] = None,
+    loan_term_years: int = 30,
+) -> str:
+    """Calculate mortgage payment for a specific home price.
+
+    LTV limits vary by residency status - see calculate_home_affordability.
+
+    Args:
+        home_price: Total home price
+        residency: 'citizen', 'expat', or 'non_resident' (default: 'expat')
+        property_type: 'first' or 'second' home (default: 'first')
+        down_payment: Down payment amount (optional, uses minimum for your status)
+        annual_interest_rate: Annual rate (optional, uses bank default)
+        loan_term_years: Loan term in years (default: 30)
+
+    Returns:
+        Monthly payment, LTV ratio, total interest, and loan breakdown
+    """
+    try:
+        result = calculate_mortgage_payment(
+            home_price=home_price,
+            down_payment=down_payment,
+            annual_interest_rate=annual_interest_rate,
+            loan_term_months=loan_term_years * 12,
+            residency=residency,
+            property_type=property_type,
+        )
+
+        if not result.get("valid", True):
+            return f"## Mortgage Calculation\n\n{result['message']}"
+
+        response = f"## Mortgage Payment Calculation\n\n"
+        response += f"**Applicant**: {residency.title()} buying {property_type} home\n"
+        response += f"**Home Price**: ${result['home_price']:,.0f}\n"
+        response += f"**Down Payment**: ${result['down_payment']:,.0f} ({result['down_payment_percentage']:.0%})\n"
+        response += f"**Loan Amount**: ${result['loan_amount']:,.0f}\n"
+        response += f"**LTV Ratio**: {result['ltv_ratio']:.0%} (max allowed: {result['max_ltv_allowed']:.0%})\n\n"
+        response += f"### Monthly Payment: ${result['monthly_payment']:,.2f}\n\n"
+        response += f"**Interest Rate**: {result['annual_interest_rate']:.2%}\n"
+        response += f"**Loan Term**: {result['loan_term_years']} years\n"
+        response += f"**Total Payment**: ${result['total_payment']:,.0f}\n"
+        response += f"**Total Interest**: ${result['total_interest']:,.0f}\n"
+
+        logger.info(f"Mortgage calc: {residency}/{property_type}, home=${home_price}, payment=${result['monthly_payment']}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error calculating mortgage: {str(e)}")
+        return f"Error calculating mortgage: {str(e)}"
+
+
+# =============================================================================
+# AUTO / CAR LOAN TOOLS
+# =============================================================================
+
+@tool(name="calculate_car_loan", show_result=True)
+def calculate_car_loan_tool(
+    car_price: float,
+    down_payment: Optional[float] = None,
+    annual_interest_rate: Optional[float] = None,
+    loan_term_months: int = 60,
+) -> str:
+    """Calculate car loan payment.
+
+    Args:
+        car_price: Vehicle price
+        down_payment: Down payment amount (optional, uses minimum if not provided)
+        annual_interest_rate: Annual rate (optional, uses bank default)
+        loan_term_months: Loan term in months (default: 60)
+
+    Returns:
+        Monthly payment, LTV ratio, total interest, and loan breakdown
+    """
+    try:
+        result = calculate_car_loan(
+            car_price=car_price,
+            down_payment=down_payment,
+            annual_interest_rate=annual_interest_rate,
+            loan_term_months=loan_term_months,
+        )
+
+        if not result.get("valid", True):
+            return f"## Car Loan Calculation\n\n{result['message']}"
+
+        response = f"## Car Loan Calculation\n\n"
+        response += f"**Vehicle Price**: ${result['car_price']:,.0f}\n"
+        response += f"**Down Payment**: ${result['down_payment']:,.0f} ({result['down_payment_percentage']:.0%})\n"
+        response += f"**Loan Amount**: ${result['loan_amount']:,.0f}\n"
+        response += f"**LTV Ratio**: {result['ltv_ratio']:.0%}\n\n"
+        response += f"### Monthly Payment: ${result['monthly_payment']:,.2f}\n\n"
+        response += f"**Interest Rate**: {result['annual_interest_rate']:.2%}\n"
+        response += f"**Loan Term**: {result['loan_term_months']} months\n"
+        response += f"**Total Payment**: ${result['total_payment']:,.0f}\n"
+        response += f"**Total Interest**: ${result['total_interest']:,.0f}\n"
+
+        logger.info(f"Car loan calc: price=${car_price}, payment=${result['monthly_payment']}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error calculating car loan: {str(e)}")
+        return f"Error calculating car loan: {str(e)}"
+
+
+@tool(name="compare_car_loan_terms", show_result=True)
+def compare_car_loan_terms_tool(
+    car_price: float,
+    down_payment: Optional[float] = None,
+    annual_interest_rate: Optional[float] = None,
+) -> str:
+    """Compare car loan options across different term lengths.
+
+    Compares 36, 48, 60, and 72 month terms showing trade-offs between
+    monthly payment and total interest.
+
+    Args:
+        car_price: Vehicle price
+        down_payment: Down payment amount (optional)
+        annual_interest_rate: Annual rate (optional, uses bank default)
+
+    Returns:
+        Comparison table of different loan terms
+    """
+    try:
+        comparison = compare_car_loan_terms(
+            car_price=car_price,
+            down_payment=down_payment,
+            annual_interest_rate=annual_interest_rate,
+        )
+
+        response = f"## Car Loan Term Comparison\n\n"
+        response += f"Comparing different terms for ${car_price:,.0f} vehicle:\n\n"
+
+        response += (
+            "| Term | Monthly Payment | Total Payment | Total Interest | Interest % |\n"
+        )
+        response += (
+            "|------|----------------|---------------|----------------|------------|\n"
+        )
+
+        for _, row in comparison.iterrows():
+            response += (
+                f"| {int(row['term_months'])} mo ({row['term_years']:.1f} yr) | "
+                f"${row['monthly_payment']:,.2f} | "
+                f"${row['total_payment']:,.0f} | "
+                f"${row['total_interest']:,.0f} | "
+                f"{row['interest_percentage']:.1f}% |\n"
+            )
+
+        response += "\n### Key Insights:\n"
+        response += "- **Shorter terms (36-48 mo)**: Higher payment, less interest\n"
+        response += "- **Longer terms (60-72 mo)**: Lower payment, more interest\n"
+        response += "- Consider your budget and total cost when choosing\n"
+
+        logger.info(f"Compared car loan terms for ${car_price}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error comparing car loan terms: {str(e)}")
+        return f"Error comparing car loan terms: {str(e)}"
+
+
+# =============================================================================
+# EARLY PAYOFF TOOL
+# =============================================================================
+
+@tool(name="calculate_early_payoff", show_result=True)
+def calculate_early_payoff_tool(
+    loan_amount: float,
+    annual_interest_rate: float,
+    loan_term_months: int,
+    extra_monthly_payment: float,
+) -> str:
+    """Calculate savings from making extra monthly payments.
+
+    Shows how much interest you can save and how much earlier you'll
+    pay off the loan by making additional monthly payments.
+
+    Args:
+        loan_amount: Original loan amount
+        annual_interest_rate: Annual interest rate
+        loan_term_months: Original loan term in months
+        extra_monthly_payment: Extra amount to pay each month
+
+    Returns:
+        Payoff timeline, interest saved, and comparison
+    """
+    try:
+        result = calculate_early_payoff(
+            loan_amount=loan_amount,
+            annual_interest_rate=annual_interest_rate,
+            loan_term_months=loan_term_months,
+            extra_monthly_payment=extra_monthly_payment,
+        )
+
+        response = f"## Early Payoff Analysis\n\n"
+        response += f"**Original Loan**: ${loan_amount:,.0f} over {loan_term_months} months\n"
+        response += f"**Extra Payment**: ${extra_monthly_payment:,.0f}/month\n\n"
+
+        response += f"### Results:\n"
+        response += f"**New Payoff Time**: {result['new_term_months']} months "
+        response += f"(saved {result['months_saved']} months / {result['years_saved']} years)\n"
+        response += f"**Original Monthly Payment**: ${result['original_monthly_payment']:,.2f}\n"
+        response += f"**New Monthly Payment**: ${result['new_monthly_payment']:,.2f}\n\n"
+
+        response += f"### Interest Savings:\n"
+        response += f"**Original Total Interest**: ${result['original_total_interest']:,.0f}\n"
+        response += f"**New Total Interest**: ${result['new_total_interest']:,.0f}\n"
+        response += f"**Interest Saved**: ${result['interest_saved']:,.0f}\n\n"
+
+        response += f"### Summary:\n{result['message']}\n"
+
+        logger.info(f"Early payoff: extra=${extra_monthly_payment}, saved=${result['interest_saved']}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error calculating early payoff: {str(e)}")
+        return f"Error calculating early payoff: {str(e)}"
+
+
+# =============================================================================
+# RAW FUNCTION EXPORTS (for testing)
+# =============================================================================
+
 # For direct function calls (e.g., in tests), we need to access the underlying functions
 # The @tool decorator wraps functions in a Function object, so we provide access to both
 # the wrapped version (for Agent use) and the raw function (for direct calls)
@@ -404,16 +716,29 @@ generate_payment_schedule_raw = generate_payment_schedule.entrypoint
 check_loan_affordability_raw = check_loan_affordability.entrypoint
 compare_loan_terms_raw = compare_loan_terms.entrypoint
 calculate_max_affordable_loan_raw = calculate_max_affordable_loan.entrypoint
+calculate_home_affordability_raw = calculate_home_affordability_tool.entrypoint
+calculate_mortgage_payment_raw = calculate_mortgage_payment_tool.entrypoint
+calculate_car_loan_raw = calculate_car_loan_tool.entrypoint
+compare_car_loan_terms_raw = compare_car_loan_terms_tool.entrypoint
+calculate_early_payoff_raw = calculate_early_payoff_tool.entrypoint
 
 # Export all tool functions for easy import
 __all__ = [
-    # Wrapped versions for Agent use
+    # Personal Loan Tools
     "check_loan_eligibility",
     "calculate_loan_payment",
     "generate_payment_schedule",
     "check_loan_affordability",
     "compare_loan_terms",
     "calculate_max_affordable_loan",
+    # Mortgage Tools
+    "calculate_home_affordability_tool",
+    "calculate_mortgage_payment_tool",
+    # Auto Loan Tools
+    "calculate_car_loan_tool",
+    "compare_car_loan_terms_tool",
+    # Early Payoff Tool
+    "calculate_early_payoff_tool",
     # Raw versions for direct calls
     "check_loan_eligibility_raw",
     "calculate_loan_payment_raw",
@@ -421,4 +746,9 @@ __all__ = [
     "check_loan_affordability_raw",
     "compare_loan_terms_raw",
     "calculate_max_affordable_loan_raw",
+    "calculate_home_affordability_raw",
+    "calculate_mortgage_payment_raw",
+    "calculate_car_loan_raw",
+    "compare_car_loan_terms_raw",
+    "calculate_early_payoff_raw",
 ]
