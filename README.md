@@ -30,8 +30,9 @@ An AI-powered loan advisory system built with **AgentOS 2.0** and **GPT-4**, des
 
 ### 💼 Loan Advisory Capabilities
 
-This agent provides **6 loan advisory tools**:
+This agent provides **11 loan advisory tools**:
 
+**Personal Loan Tools:**
 1. **Check Loan Eligibility** - Evaluate customer profiles against banking criteria (age, income, credit score, employment, DTI ratio)
 2. **Calculate Loan Payment** - Compute accurate monthly payments, total costs, and interest
 3. **Generate Payment Schedule** - Create detailed month-by-month amortization breakdowns
@@ -39,9 +40,32 @@ This agent provides **6 loan advisory tools**:
 5. **Compare Loan Terms** - Side-by-side comparison of different loan options
 6. **Calculate Max Loan Amount** - Find the maximum affordable loan
 
+**Mortgage Tools (NEW):**
+7. **Calculate Home Affordability** - Determine max home price based on income and UAE residency rules
+8. **Calculate Mortgage Payment** - Compute mortgage payments with dynamic LTV based on residency status
+
+**Auto Loan Tools (NEW):**
+9. **Calculate Car Loan** - Calculate auto loan payments with vehicle-type-specific LTV rules
+10. **Compare Car Loan Terms** - Compare different term lengths (36/48/60/72 months)
+
+**Cross-Loan Tools (NEW):**
+11. **Calculate Early Payoff** - Analyze interest savings from extra monthly payments
+
+### 📋 Rule-Based LTV Engine (NEW)
+
+Dynamic Loan-to-Value (LTV) calculation based on **UAE Central Bank regulations**:
+
+| Residency | Property | Max LTV | Min Down Payment |
+|-----------|----------|---------|------------------|
+| UAE Citizen | First (≤5M) | 85% | 15% |
+| UAE Citizen | First (>5M) | 80% | 20% |
+| Expat | First | 80% | 20% |
+| Expat | Second | 65% | 35% |
+| Non-Resident | Any | 50% | 50% |
+
 ### 🔬 Evaluation Framework
 
-- **46 Automated Tests** (42 unit tests + 4 DeepEval integration tests)
+- **138 Automated Tests** (134 unit tests + 4 DeepEval integration tests)
 - **DeepEval Metrics** - Answer Relevancy ≥70%, Faithfulness ≥70%, Hallucination ≤50%
 - **Context Reconstruction** - Innovative approach to reconstruct context from tool call re-execution
 - **Tool Call Validation** - Automatic validation of tool selection and parameters
@@ -269,32 +293,32 @@ The project includes **two testing layers**: Unit Tests (business logic) and Dee
 
 | Test Type | Files | Count | Coverage | Speed |
 |-----------|-------|-------|----------|-------|
-| **Unit Tests** | `test_loan_calculator_simple.py`<br>`test_loan_eligibility_simple.py` | **42 tests** | All 6 tools | ~0.3s |
+| **Unit Tests** | `test_loan_calculator_simple.py`<br>`test_loan_eligibility_simple.py`<br>`test_loan_rules.py`<br>`test_loan_calculator_extended.py` | **134 tests** | All 11 tools + rules | ~0.5s |
 | **DeepEval Tests** | `test_loan_advisor_agent.py` | **4 tests** | Agent quality | ~30s |
 
 ---
 
 ### 1️⃣ Unit Tests
 
-Test the **core business logic** of all 6 tools (no AI, no agent).
+Test the **core business logic** of all 11 tools and rule engine (no AI, no agent).
 
 #### Run Unit Tests
 
 ```bash
-# Run all unit tests (42 tests, fast)
-uv run pytest tests/test_loan_calculator_simple.py tests/test_loan_eligibility_simple.py -v
+# Run all unit tests (134 tests, fast)
+uv run pytest tests/test_loan_*.py -v --ignore=tests/test_loan_advisor_agent.py
 
 # Run with coverage report
-uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=term-missing
+uv run pytest tests/test_loan_*.py --ignore=tests/test_loan_advisor_agent.py --cov=src/tools --cov-report=term-missing
 
 # Generate HTML coverage report
-uv run pytest tests/test_loan_*_simple.py --cov=src/tools --cov-report=html
+uv run pytest tests/test_loan_*.py --ignore=tests/test_loan_advisor_agent.py --cov=src/tools --cov-report=html
 open htmlcov/index.html
 ```
 
 #### What's Tested
 
-**Calculator Tests** (16 tests) - 5 tools:
+**Calculator Tests** (16 tests) - Personal loan tools:
 - ✅ Monthly payment calculations
 - ✅ Amortization schedules
 - ✅ DTI ratio and affordability
@@ -302,13 +326,29 @@ open htmlcov/index.html
 - ✅ Maximum loan calculations
 - ✅ Edge cases (zero interest, large amounts)
 
-**Eligibility Tests** (26 tests) - 1 tool:
+**Eligibility Tests** (26 tests) - Eligibility tool:
 - ✅ Age requirements
 - ✅ Income thresholds
 - ✅ Credit score validation
 - ✅ Employment status
 - ✅ DTI limits
 - ✅ Boundary conditions
+
+**Loan Rules Tests** (46 tests) - Rule engine:
+- ✅ MortgageRule model validation
+- ✅ UAE Central Bank regulation matching
+- ✅ Price-based LTV boundaries (5M AED)
+- ✅ Residency-based rule selection
+- ✅ Auto loan rules by vehicle type
+- ✅ Default fallback behavior
+
+**Extended Calculator Tests** (46 tests) - Mortgage/Auto tools:
+- ✅ Home affordability calculations
+- ✅ Mortgage payment with LTV rules
+- ✅ Car loan calculations
+- ✅ Term comparison (36/48/60/72 months)
+- ✅ Early payoff interest savings
+- ✅ Factory pattern (get_calculator)
 
 ---
 
@@ -340,11 +380,11 @@ uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
 #### Run All Tests
 
 ```bash
-# Run everything (46 tests total)
+# Run everything (138 tests total)
 uv run pytest tests/ -v
 
 # Quick validation (unit tests only)
-uv run pytest tests/test_loan_*_simple.py -v
+uv run pytest tests/test_loan_*.py -v --ignore=tests/test_loan_advisor_agent.py
 ```
 
 ---
@@ -381,12 +421,18 @@ uv run pytest tests/test_loan_*_simple.py -v
    - **Tools Layer** (`src/tools/`) - Pure business logic, framework-agnostic
    - **Agent Layer** (`src/agent/`) - AgentOS integration and orchestration
 
-2. **Dependency Inversion**
+2. **Rule-Based Engine (SOLID)**
+   - **Single Responsibility** - Each rule handles one condition set
+   - **Open/Closed** - Add new rules without modifying existing code
+   - **Liskov Substitution** - MortgageRule and AutoLoanRule are interchangeable
+   - First-match algorithm for efficient rule lookup
+
+3. **Dependency Inversion**
    - Business logic doesn't depend on AI frameworks
    - Tools can be reused in LangChain, LlamaIndex, etc.
 
-3. **Testing Pyramid**
-   - Fast unit tests for business logic (42 tests)
+4. **Testing Pyramid**
+   - Fast unit tests for business logic (134 tests)
    - Comprehensive DeepEval tests for agent quality (4 tests)
 
 ---
@@ -401,15 +447,21 @@ personal-loan-advisor-agent/
 │   │   └── loan_advisor_tools.py       # Tool wrappers for AgentOS
 │   ├── tools/                          # Business Logic Layer
 │   │   ├── loan_eligibility.py         # Eligibility checking logic
-│   │   └── loan_calculator.py          # Loan calculation logic
+│   │   ├── loan_calculator.py          # Loan calculation (personal/mortgage/auto)
+│   │   ├── loan_rules.py               # UAE mortgage & auto loan LTV rules
+│   │   └── loan_types.py               # Loan type enums
 │   └── utils/                          # Utilities
 │       ├── config.py                   # Configuration management
 │       └── logger.py                   # Logging system
 ├── tests/                              # Testing & Evaluation
-│   ├── test_loan_calculator_simple.py  # 16 calculator unit tests
-│   ├── test_loan_eligibility_simple.py # 26 eligibility unit tests
+│   ├── test_loan_calculator_simple.py  # 16 personal loan calculator tests
+│   ├── test_loan_eligibility_simple.py # 26 eligibility tests
+│   ├── test_loan_rules.py              # 46 rule engine tests
+│   ├── test_loan_calculator_extended.py# 46 mortgage/auto calculator tests
 │   ├── test_loan_advisor_agent.py      # 4 DeepEval integration tests
 │   └── deepeval_config.py              # DeepEval configuration
+├── docs/                               # Documentation
+│   └── MULTI_LOAN_TYPE_DESIGN_CN.md    # Multi-loan design (Chinese/English)
 ├── .env.example                        # Environment variables template
 ├── pyproject.toml                      # Project dependencies
 ├── pytest.ini                          # Pytest configuration
@@ -450,12 +502,14 @@ uv run uvicorn src.agent.loan_advisor_agent:app --reload
 
 ## 🎓 What Makes This Project Stand Out
 
-1. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem by re-executing tool calls
-2. **Comprehensive Testing** - 42 unit tests + 4 DeepEval tests with LLM-as-judge evaluation
-3. **Production-Ready** - Type hints, validation, error handling, logging, environment-based config
-4. **Framework-Agnostic** - Business logic independent of AI framework
-5. **Dual Operating Modes** - Interactive CLI and REST API for flexible deployment
-6. **Complete Tool Coverage** - All 6 tools fully tested
+1. **Multi-Loan Support** - Personal loans, mortgages, and auto loans with UAE regulations
+2. **Rule-Based LTV Engine** - Dynamic LTV calculation based on residency and property type
+3. **SOLID Design Principles** - Extensible rule system following best practices
+4. **Comprehensive Testing** - 134 unit tests + 4 DeepEval tests with LLM-as-judge evaluation
+5. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem
+6. **Production-Ready** - Type hints, Pydantic validation, error handling, logging
+7. **Framework-Agnostic** - Business logic independent of AI framework
+8. **Complete Tool Coverage** - All 11 tools fully tested
 
 ---
 
