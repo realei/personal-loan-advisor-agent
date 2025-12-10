@@ -5,6 +5,11 @@ This module is designed to work seamlessly with AgentOS UI:
 - MongoDB persistence for conversation history
 - Clean agent responses for UI display
 - Compatible with AgentOS UI's session tracking
+
+Structured Output Mode:
+- Uses Pydantic response models for deterministic output
+- Temperature set to 0.0 for consistency
+- All responses follow LoanAdvisorResponse schema
 """
 
 import os
@@ -22,6 +27,7 @@ from src.agent.loan_advisor_tools import (
     compare_loan_terms,
     calculate_max_affordable_loan,
 )
+from src.agent.response_models import LoanAdvisorResponse
 from src.utils.config import config
 from src.utils.logger import get_logger
 
@@ -73,19 +79,52 @@ Your goal is to help customers understand their loan options and make informed d
 3. Only ask follow-up questions if critical information is truly missing
 4. Provide clear recommendations based on tool results
 
-## Response Style:
-- Use bullet points for clarity
-- Include specific dollar amounts
-- Highlight important warnings using **bold**
-- End with next steps or recommendations
+## STRUCTURED OUTPUT FORMAT:
+Your response MUST follow the LoanAdvisorResponse schema:
+
+1. **action**: Choose from:
+   - "eligibility_check" - when checking if someone qualifies
+   - "payment_calculation" - when calculating monthly payments
+   - "payment_schedule" - when generating amortization schedule
+   - "affordability_check" - when assessing if loan is affordable
+   - "term_comparison" - when comparing different loan terms
+   - "max_loan_calculation" - when finding max affordable loan
+   - "home_affordability" - when calculating home buying capacity
+   - "mortgage_payment" - when calculating mortgage payments
+   - "car_loan" - when calculating auto loan
+   - "car_loan_comparison" - when comparing car loan terms
+   - "early_payoff" - when calculating early payoff savings
+   - "general_response" - for general questions
+
+2. **tool_called**: The name of the tool you called (or null)
+
+3. **Populate the appropriate result field** based on action:
+   - eligibility, payment, affordability, term_comparison, max_loan
+   - home_affordability, mortgage, car_loan, early_payoff
+
+4. **summary**: One clear sentence summarizing the result
+
+5. **details**: Detailed explanation in markdown
+
+6. **recommendations**: List of actionable advice
+
+7. **warnings**: List any concerns (high DTI, large loan, etc.)
+
+8. **follow_up_questions**: Suggest 1-2 relevant follow-up questions
 """
 
+# Determine if structured output mode is enabled
+# Set STRUCTURED_OUTPUT=true in .env to enable
+STRUCTURED_OUTPUT_ENABLED = os.getenv("STRUCTURED_OUTPUT", "false").lower() == "true"
+
 # Create the Agent for AgentOS UI
+# Use structured output for deterministic responses when enabled
 loan_advisor_agent = Agent(
     name="Personal Loan Advisor",
     model=OpenAIChat(
         id=config.api.agent_model,
-        temperature=config.api.temperature
+        # Use temperature 0.0 for deterministic output in structured mode
+        temperature=0.0 if STRUCTURED_OUTPUT_ENABLED else config.api.temperature
     ),
     # MongoDB configuration for UI session persistence
     db=MongoDb(
@@ -104,6 +143,10 @@ loan_advisor_agent = Agent(
         compare_loan_terms,
         calculate_max_affordable_loan,
     ],
+    # Structured output configuration
+    response_model=LoanAdvisorResponse if STRUCTURED_OUTPUT_ENABLED else None,
+    structured_outputs=STRUCTURED_OUTPUT_ENABLED,
+    # Context configuration
     add_datetime_to_context=True,
     add_session_state_to_context=True,
     enable_session_summaries=True,
@@ -115,9 +158,13 @@ loan_advisor_agent = Agent(
     instructions=SYSTEM_INSTRUCTIONS,
     # Number of previous messages to include
     num_history_runs=10,
-    # Format responses in markdown for UI display
-    markdown=True
+    # Format responses in markdown for UI display (disabled in structured mode)
+    markdown=not STRUCTURED_OUTPUT_ENABLED
 )
+
+logger.info(f"Structured output mode: {'ENABLED' if STRUCTURED_OUTPUT_ENABLED else 'DISABLED'}")
+if STRUCTURED_OUTPUT_ENABLED:
+    logger.info("Using LoanAdvisorResponse model with temperature=0.0")
 
 # Create AgentOS instance for UI
 # Note: Bearer token authentication is automatically enabled when OS_SECURITY_KEY
