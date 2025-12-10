@@ -28,6 +28,7 @@ from src.agent.loan_advisor_tools import (
     calculate_max_affordable_loan,
 )
 from src.agent.response_models import LoanAdvisorResponse
+from src.agent.output_formatter import OutputMode, get_formatter
 from src.utils.config import config
 from src.utils.logger import get_logger
 
@@ -113,9 +114,13 @@ Your response MUST follow the LoanAdvisorResponse schema:
 8. **follow_up_questions**: Suggest 1-2 relevant follow-up questions
 """
 
-# Determine if structured output mode is enabled
-# Set STRUCTURED_OUTPUT=true in .env to enable
-STRUCTURED_OUTPUT_ENABLED = os.getenv("STRUCTURED_OUTPUT", "false").lower() == "true"
+# Determine output mode from environment
+# Set OUTPUT_MODE=structured in .env for Pydantic output
+OUTPUT_MODE = OutputMode.from_env()
+IS_STRUCTURED = OUTPUT_MODE == OutputMode.STRUCTURED
+
+# Create formatter for output formatting
+formatter = get_formatter(OUTPUT_MODE)
 
 # Create the Agent for AgentOS UI
 # Use structured output for deterministic responses when enabled
@@ -124,7 +129,7 @@ loan_advisor_agent = Agent(
     model=OpenAIChat(
         id=config.api.agent_model,
         # Use temperature 0.0 for deterministic output in structured mode
-        temperature=0.0 if STRUCTURED_OUTPUT_ENABLED else config.api.temperature
+        temperature=0.0 if IS_STRUCTURED else config.api.temperature
     ),
     # MongoDB configuration for UI session persistence
     db=MongoDb(
@@ -144,8 +149,8 @@ loan_advisor_agent = Agent(
         calculate_max_affordable_loan,
     ],
     # Structured output configuration
-    response_model=LoanAdvisorResponse if STRUCTURED_OUTPUT_ENABLED else None,
-    structured_outputs=STRUCTURED_OUTPUT_ENABLED,
+    response_model=LoanAdvisorResponse if IS_STRUCTURED else None,
+    structured_outputs=IS_STRUCTURED,
     # Context configuration
     add_datetime_to_context=True,
     add_session_state_to_context=True,
@@ -159,12 +164,14 @@ loan_advisor_agent = Agent(
     # Number of previous messages to include
     num_history_runs=10,
     # Format responses in markdown for UI display (disabled in structured mode)
-    markdown=not STRUCTURED_OUTPUT_ENABLED
+    markdown=not IS_STRUCTURED
 )
 
-logger.info(f"Structured output mode: {'ENABLED' if STRUCTURED_OUTPUT_ENABLED else 'DISABLED'}")
-if STRUCTURED_OUTPUT_ENABLED:
+logger.info(f"Output mode: {OUTPUT_MODE.value}")
+if IS_STRUCTURED:
     logger.info("Using LoanAdvisorResponse model with temperature=0.0")
+else:
+    logger.info("Using MarkdownFormatter for streaming output")
 
 # Create AgentOS instance for UI
 # Note: Bearer token authentication is automatically enabled when OS_SECURITY_KEY
