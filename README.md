@@ -51,7 +51,22 @@ This agent provides **11 loan advisory tools**:
 **Cross-Loan Tools (NEW):**
 11. **Calculate Early Payoff** - Analyze interest savings from extra monthly payments
 
-### 📋 Rule-Based LTV Engine (NEW)
+### 📤 Structured Output Mode (NEW)
+
+Configurable output formatting with SOLID design principles:
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `markdown` | Human-readable, streaming-friendly | CLI, demos, interactive use |
+| `structured` | Pydantic-validated JSON responses | API integration, programmatic access |
+
+**Design Patterns:**
+- **Strategy Pattern**: MarkdownFormatter vs StructuredFormatter
+- **Factory Pattern**: `get_formatter()` creates appropriate instance
+- **Protocol**: OutputFormatter defines the contract
+- **Single Config**: `OUTPUT_MODE=markdown|structured`
+
+### 📋 Rule-Based LTV Engine
 
 Dynamic Loan-to-Value (LTV) calculation based on **UAE Central Bank regulations**:
 
@@ -65,7 +80,7 @@ Dynamic Loan-to-Value (LTV) calculation based on **UAE Central Bank regulations*
 
 ### 🔬 Evaluation Framework
 
-- **138 Automated Tests** (134 unit tests + 4 DeepEval integration tests)
+- **231 Automated Tests** (134 unit + 48 response models + 49 formatter tests)
 - **DeepEval Metrics** - Answer Relevancy ≥70%, Faithfulness ≥70%, Hallucination ≤50%
 - **Context Reconstruction** - Innovative approach to reconstruct context from tool call re-execution
 - **Tool Call Validation** - Automatic validation of tool selection and parameters
@@ -142,6 +157,14 @@ DEEPEVAL_MODEL=gpt-4o-mini
 
 # LLM Temperature (default: 0.7)
 TEMPERATURE=0.7
+```
+
+**Output Mode Settings:**
+```bash
+# Output format: markdown (default) or structured
+# markdown: Human-readable streaming output for CLI/demos
+# structured: Pydantic-validated JSON for API integration
+OUTPUT_MODE=markdown
 ```
 
 **MongoDB Settings (Optional - for session persistence):**
@@ -294,6 +317,8 @@ The project includes **two testing layers**: Unit Tests (business logic) and Dee
 | Test Type | Files | Count | Coverage | Speed |
 |-----------|-------|-------|----------|-------|
 | **Unit Tests** | `test_loan_calculator_simple.py`<br>`test_loan_eligibility_simple.py`<br>`test_loan_rules.py`<br>`test_loan_calculator_extended.py` | **134 tests** | All 11 tools + rules | ~0.5s |
+| **Response Model Tests** | `test_response_models.py` | **48 tests** | Pydantic response models | ~0.2s |
+| **Formatter Tests** | `test_output_formatter.py` | **49 tests** | Output formatters (SOLID) | ~0.2s |
 | **DeepEval Tests** | `test_loan_advisor_agent.py` | **4 tests** | Agent quality | ~30s |
 
 ---
@@ -380,11 +405,14 @@ uv run pytest tests/test_loan_advisor_agent.py::test_tool_calls_info -v
 #### Run All Tests
 
 ```bash
-# Run everything (138 tests total)
+# Run everything (231 tests total)
 uv run pytest tests/ -v
 
 # Quick validation (unit tests only)
 uv run pytest tests/test_loan_*.py -v --ignore=tests/test_loan_advisor_agent.py
+
+# Run formatter and response model tests
+uv run pytest tests/test_output_formatter.py tests/test_response_models.py -v
 ```
 
 ---
@@ -444,7 +472,9 @@ personal-loan-advisor-agent/
 ├── src/
 │   ├── agent/                          # Agent Layer (AgentOS)
 │   │   ├── loan_advisor_agent.py       # Main agent (interactive + API)
-│   │   └── loan_advisor_tools.py       # Tool wrappers for AgentOS
+│   │   ├── loan_advisor_tools.py       # Tool wrappers for AgentOS
+│   │   ├── response_models.py          # Pydantic response models (NEW)
+│   │   └── output_formatter.py         # SOLID output formatter (NEW)
 │   ├── tools/                          # Business Logic Layer
 │   │   ├── loan_eligibility.py         # Eligibility checking logic
 │   │   ├── loan_calculator.py          # Loan calculation (personal/mortgage/auto)
@@ -458,6 +488,8 @@ personal-loan-advisor-agent/
 │   ├── test_loan_eligibility_simple.py # 26 eligibility tests
 │   ├── test_loan_rules.py              # 46 rule engine tests
 │   ├── test_loan_calculator_extended.py# 46 mortgage/auto calculator tests
+│   ├── test_response_models.py         # 48 response model tests (NEW)
+│   ├── test_output_formatter.py        # 49 output formatter tests (NEW)
 │   ├── test_loan_advisor_agent.py      # 4 DeepEval integration tests
 │   └── deepeval_config.py              # DeepEval configuration
 ├── docs/                               # Documentation
@@ -504,12 +536,13 @@ uv run uvicorn src.agent.loan_advisor_agent:app --reload
 
 1. **Multi-Loan Support** - Personal loans, mortgages, and auto loans with UAE regulations
 2. **Rule-Based LTV Engine** - Dynamic LTV calculation based on residency and property type
-3. **SOLID Design Principles** - Extensible rule system following best practices
-4. **Comprehensive Testing** - 134 unit tests + 4 DeepEval tests with LLM-as-judge evaluation
-5. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem
-6. **Production-Ready** - Type hints, Pydantic validation, error handling, logging
-7. **Framework-Agnostic** - Business logic independent of AI framework
-8. **Complete Tool Coverage** - All 11 tools fully tested
+3. **Structured Output Mode** - Configurable output with Strategy/Factory patterns (SOLID)
+4. **SOLID Design Principles** - Extensible rule system and output formatters
+5. **Comprehensive Testing** - 231 tests (134 unit + 48 response + 49 formatter + DeepEval)
+6. **Context Reconstruction Innovation** - Solved DeepEval's Hallucination metric context problem
+7. **Production-Ready** - Type hints, Pydantic validation, error handling, logging
+8. **Framework-Agnostic** - Business logic independent of AI framework
+9. **Complete Tool Coverage** - All 11 tools fully tested
 
 ---
 
