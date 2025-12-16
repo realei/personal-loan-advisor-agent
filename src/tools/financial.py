@@ -20,18 +20,6 @@ import numpy_financial as npf
 import pandas as pd
 
 
-class PaymentCalculator(Protocol):
-    """Protocol for payment calculations - enables duck typing."""
-
-    def payment(self, principal: float, rate: float, periods: int) -> float:
-        """Calculate monthly payment."""
-        ...
-
-    def max_principal(self, payment: float, rate: float, periods: int) -> float:
-        """Calculate maximum principal for given payment."""
-        ...
-
-
 class FinancialEngine:
     """Financial calculation engine wrapping numpy-financial.
 
@@ -212,5 +200,5 @@ class FinancialEngine:
         })
 
 
-# Global singleton instance - stateless, safe to share
+# Module-level shared instance - stateless, safe to share
 engine = FinancialEngine()
