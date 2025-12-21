@@ -110,5 +110,9 @@ dmypy.json
 # Deepeval
 .deepeval/
 
+# claude
+.claude/
+.claude*
+
 # Interview preparation (personal notes)
 INTERVIEW_PREP.md
